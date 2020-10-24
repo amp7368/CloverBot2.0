@@ -8,5 +8,6 @@ public class CloverMain {
     public static void main(String[] args) throws LoginException {
         DiscordBot bot = new DiscordBot();
         bot.enableDiscord();
+        new GuildListThread().start();
     }
 }
