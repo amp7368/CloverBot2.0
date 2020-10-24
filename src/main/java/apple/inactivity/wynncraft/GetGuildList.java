@@ -16,7 +16,7 @@ import java.util.Set;
 public class GetGuildList {
     public static Set<String> getGuildList() {
         try {
-            InputStreamReader url = new InputStreamReader(new URL(Links.guildList).openConnection().getInputStream());
+            InputStreamReader url = new InputStreamReader(new URL(Links.GUILD_LIST).openConnection().getInputStream());
             JSONParser parser = new JSONParser();
             JSONObject response = (JSONObject) parser.parse(url);
             JSONArray guilds = (JSONArray) response.get("guilds");
