@@ -23,6 +23,7 @@ import java.util.List;
 
 public class DiscordBot extends ListenerAdapter {
     public static final String PREFIX = "c!";
+    public static final long APPLEPTR16 = 253646208084475904L;
 
     public static String discordToken; // my bot
     public static JDA client;
@@ -57,7 +58,7 @@ public class DiscordBot extends ListenerAdapter {
         JDABuilder builder = JDABuilder.createDefault(discordToken);
         builder.addEventListeners(this);
         client = builder.build();
-        client.getPresence().setPresence(Activity.playing(PREFIX + "help~coming soon"), true);
+        client.getPresence().setPresence(Activity.playing("dm appleptr16#5054 with ideas for new features"), false);
     }
 
     @Override

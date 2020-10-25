@@ -1,16 +1,21 @@
 package apple.inactivity.discord.commands;
 
+import apple.inactivity.discord.commands.general.CommandHelp;
 import apple.inactivity.discord.commands.general.CommandInactivity;
+import apple.inactivity.discord.commands.general.CommandSuggest;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 import static apple.inactivity.discord.DiscordBot.PREFIX;
 
 public enum Commands {
-    INACTIVITY(Arrays.asList("inactivity", "activity"), "Gives a message of inactivity for a guild", "[guild]", CommandInactivity::new);
+    INACTIVITY(Arrays.asList("inactivity", "activity"), "Gives a message of inactivity for a guild", "[guild]", CommandInactivity::new),
+    SUGGEST(Collections.singletonList("suggest"), "Suggests an idea to appleptr16", "[message]", CommandSuggest::dealWithCommand),
+    HELP(Collections.singletonList("help"), "Gives a help message", "", CommandHelp::dealWithCommand);
 
     private final List<String> commandNames;
     private final String helpMessage;
@@ -24,13 +29,14 @@ public enum Commands {
         this.command = command;
     }
 
-    public String getHelpMessage() {
+    public String getUsageMessage() {
         return String.format("**%s%s %s** - %s", PREFIX, commandNames.get(0), usageMessage, helpMessage);
     }
 
-    public String getUsageMessage() {
-        return String.format("Usage - %s%s %s", PREFIX, commandNames.get(0), usageMessage);
+    public String getBareUsageMessage() {
+        return String.format("%s%s %s", PREFIX, commandNames.get(0), usageMessage);
     }
+
 
     public boolean isCommand(String command) {
         for (String myCommand : commandNames)
