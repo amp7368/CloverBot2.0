@@ -23,7 +23,7 @@ public class GetGuildPlayers {
     @Nullable
     public static List<PlayerWithInactivity> getGuildPlayers(String guildName, Message progressMessage) {
         try {
-            InputStreamReader url = new InputStreamReader(new URL(String.format(Links.GUILD_STATS, guildName)).openConnection().getInputStream());
+            InputStreamReader url = new InputStreamReader(new URL(String.format(Links.GUILD_STATS, guildName).replace(" ", "+")).openConnection().getInputStream());
             JSONParser parser = new JSONParser();
             JSONObject response = (JSONObject) parser.parse(url);
             JSONArray membersObject = (JSONArray) response.get("members");
@@ -34,11 +34,11 @@ public class GetGuildPlayers {
                 String uuid = ((JSONObject) memberObject).get("uuid").toString();
                 String rank = ((JSONObject) memberObject).get("rank").toString();
                 players.add(getPlayer(uuid, rank));
-                progressMessage.editMessage(Pretty.getProgress(progress++ / size)).queue();
+                progressMessage.editMessage(Pretty.getProgress(++progress / size)).queue();
             }
             players.removeIf(Objects::isNull);
             return players;
-        } catch (IOException | ParseException e) {
+        } catch (IOException | NullPointerException | ParseException e) {
             e.printStackTrace();
             return null;
         }

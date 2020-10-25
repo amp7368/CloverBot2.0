@@ -5,9 +5,11 @@ import apple.inactivity.Pretty;
 import apple.inactivity.data.PlayerWithInactivity;
 import apple.inactivity.discord.commands.Commands;
 import apple.inactivity.discord.commands.DoCommand;
+import apple.inactivity.discord.reactions.InactivityMessage;
 import apple.inactivity.wynncraft.GetGuildPlayers;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,8 +34,8 @@ public class CommandInactivity implements DoCommand {
             return;
         } // else try it with guildName, but tell the user if nothing happens
         Message message = event.getChannel().sendMessage(Pretty.getProgress(0)).complete();
-        List<PlayerWithInactivity> playersInGuild = GetGuildPlayers.getGuildPlayers(guildName, message);
-
+        @Nullable List<PlayerWithInactivity> playersInGuild = GetGuildPlayers.getGuildPlayers(guildName, message);
+        new InactivityMessage(guildName, playersInGuild, message);
 
     }
 }
