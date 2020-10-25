@@ -4,7 +4,6 @@ import apple.inactivity.GuildListThread;
 import apple.inactivity.Pretty;
 import apple.inactivity.data.PlayerWithInactivity;
 import apple.inactivity.discord.commands.Commands;
-import apple.inactivity.discord.commands.DoCommand;
 import apple.inactivity.discord.reactions.InactivityMessage;
 import apple.inactivity.wynncraft.GetGuildPlayers;
 import net.dv8tion.jda.api.entities.Message;
@@ -15,9 +14,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class CommandInactivity implements DoCommand {
+public class CommandInactivity extends Thread {
+    private final MessageReceivedEvent event;
+
+    public CommandInactivity(MessageReceivedEvent event) {
+        this.event = event;
+        this.start();
+    }
+
     @Override
-    public void dealWithCommand(MessageReceivedEvent event) {
+    public void run() {
         List<String> content = new ArrayList<>(Arrays.asList(event.getMessage().getContentDisplay().split(" ")));
         if (content.size() < 2) {
             event.getChannel().sendMessage(Commands.INACTIVITY.getUsageMessage()).queue();
@@ -36,6 +42,5 @@ public class CommandInactivity implements DoCommand {
         Message message = event.getChannel().sendMessage(Pretty.getProgress(0)).complete();
         @Nullable List<PlayerWithInactivity> playersInGuild = GetGuildPlayers.getGuildPlayers(guildName, message);
         new InactivityMessage(guildName, playersInGuild, message);
-
     }
 }

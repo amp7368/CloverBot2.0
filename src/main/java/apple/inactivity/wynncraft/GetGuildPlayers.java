@@ -19,28 +19,37 @@ import java.util.List;
 import java.util.Objects;
 
 public class GetGuildPlayers {
+    private static final Object sync = new Object();
+    private static boolean isLocked = false;
 
     @Nullable
     public static List<PlayerWithInactivity> getGuildPlayers(String guildName, Message progressMessage) {
-        try {
-            InputStreamReader url = new InputStreamReader(new URL(String.format(Links.GUILD_STATS, guildName).replace(" ", "+")).openConnection().getInputStream());
-            JSONParser parser = new JSONParser();
-            JSONObject response = (JSONObject) parser.parse(url);
-            JSONArray membersObject = (JSONArray) response.get("members");
-            List<PlayerWithInactivity> players = new ArrayList<>();
-            double progress = 0;
-            int size = membersObject.size();
-            for (Object memberObject : membersObject) {
-                String uuid = ((JSONObject) memberObject).get("uuid").toString();
-                String rank = ((JSONObject) memberObject).get("rank").toString();
-                players.add(getPlayer(uuid, rank));
-                progressMessage.editMessage(Pretty.getProgress(++progress / size)).queue();
+        if(isLocked){
+            progressMessage.editMessage("I'll work on this after processing another request.").complete();
+        }
+        synchronized (sync) {
+            isLocked = true;
+            try {
+                InputStreamReader url = new InputStreamReader(new URL(String.format(Links.GUILD_STATS, guildName).replace(" ", "+")).openConnection().getInputStream());
+                JSONParser parser = new JSONParser();
+                JSONObject response = (JSONObject) parser.parse(url);
+                JSONArray membersObject = (JSONArray) response.get("members");
+                List<PlayerWithInactivity> players = new ArrayList<>();
+                double progress = 0;
+                int size = membersObject.size();
+                for (Object memberObject : membersObject) {
+                    String uuid = ((JSONObject) memberObject).get("uuid").toString();
+                    String rank = ((JSONObject) memberObject).get("rank").toString();
+                    players.add(getPlayer(uuid, rank));
+                    progressMessage.editMessage(Pretty.getProgress(++progress / size)).queue();
+                }
+                players.removeIf(Objects::isNull);
+                isLocked = false;
+                return players;
+            } catch (IOException | NullPointerException | ParseException e) {
+                isLocked = false;
+                return null;
             }
-            players.removeIf(Objects::isNull);
-            return players;
-        } catch (IOException | NullPointerException | ParseException e) {
-            e.printStackTrace();
-            return null;
         }
     }
 

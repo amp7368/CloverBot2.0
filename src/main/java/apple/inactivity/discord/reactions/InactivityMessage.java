@@ -11,7 +11,7 @@ import java.util.List;
 
 public class InactivityMessage implements ReactableMessage {
     private static final int ENTRIES_PER_PAGE = 15;
-    public static final long MILLIS_IN_DAY = 1000 * 60 * 60;
+    public static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
     private int page = 0;
     private final String guildName;
     private final List<PlayerWithInactivity> playersInGuild;
