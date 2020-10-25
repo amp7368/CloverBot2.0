@@ -14,21 +14,21 @@ import org.json.simple.parser.ParseException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class GetGuildPlayers {
     private static final Object sync = new Object();
     private static boolean isLocked = false;
+    private static final Map<String, PlayerWithInactivity> playerCache = new HashMap<>();
 
     @Nullable
     public static List<PlayerWithInactivity> getGuildPlayers(String guildName, Message progressMessage) {
-        if(isLocked){
+        if (isLocked) {
             progressMessage.editMessage("I'll work on this after processing another request.").complete();
         }
         synchronized (sync) {
             isLocked = true;
+            playerCache.entrySet().removeIf(entry -> entry.getValue() == null || entry.getValue().isOld());
             try {
                 InputStreamReader url = new InputStreamReader(new URL(String.format(Links.GUILD_STATS, guildName).replace(" ", "+")).openConnection().getInputStream());
                 JSONParser parser = new JSONParser();
@@ -40,8 +40,16 @@ public class GetGuildPlayers {
                 for (Object memberObject : membersObject) {
                     String uuid = ((JSONObject) memberObject).get("uuid").toString();
                     String rank = ((JSONObject) memberObject).get("rank").toString();
-                    players.add(getPlayer(uuid, rank));
-                    progressMessage.editMessage(Pretty.getProgress(++progress / size)).queue();
+                    PlayerWithInactivity player = playerCache.get(uuid);
+                    if (player == null) {
+                        player = getPlayer(uuid, rank);
+                        playerCache.put(uuid, player);
+                        players.add(player);
+                        progressMessage.editMessage(Pretty.getProgress(++progress / size)).queue();
+                    }else{
+                        players.add(player);
+                        // don't add edit the progress message
+                    }
                 }
                 players.removeIf(Objects::isNull);
                 isLocked = false;
@@ -54,6 +62,7 @@ public class GetGuildPlayers {
     }
 
     public static PlayerWithInactivity getPlayer(String uuid, String rank) {
+        System.out.println("getting");
         try {
             InputStreamReader url = new InputStreamReader(new URL(String.format(Links.PLAYER_STATS, uuid)).openConnection().getInputStream());
             JSONParser parser = new JSONParser();
@@ -65,7 +74,7 @@ public class GetGuildPlayers {
                 Thread.sleep(GuildListThread.REQUEST_SLEEP);
             } catch (InterruptedException ignored) {
             }
-            return new PlayerWithInactivity(userName, lastJoined, rank);
+            return new PlayerWithInactivity(userName, lastJoined, rank, uuid);
         } catch (IOException | ParseException e) {
             e.printStackTrace();
             return null;
