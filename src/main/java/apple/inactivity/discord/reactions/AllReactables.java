@@ -53,18 +53,9 @@ public class AllReactables {
     public enum Reactable {
         LEFT(Collections.singletonList("\u2B05")),
         RIGHT(Collections.singletonList("\u27A1")),
-        CLOCK_LEFT(Collections.singletonList("\uD83D\uDD59")),
-        CLOCK_RIGHT(Collections.singletonList("\uD83D\uDD51")),
         TOP(Collections.singletonList("\u21A9")),
-        ACCEPT(Collections.singletonList("\u2705")),
-        REJECT(Collections.singletonList("\u274C")),
-        DARES(Collections.singletonList("dareemooji"), Collections.singletonList(765315908683825183L)),
-        EXCURSIONS(Collections.singletonList("excursionemoji"), Collections.singletonList(765315908738482176L)),
-        MISSIONS(Collections.singletonList("missionemoji"), Collections.singletonList(765315910806011914L)),
-        ALL_CATEGORIES(Collections.singletonList("\u274C")),
-        ALPHABET(emojiAlphabet),
-        WORKING(Collections.singletonList("\uD83D\uDEE0")),
-        RESPOND(Collections.singletonList("\uD83D\uDCE8"));
+        UP(Collections.singletonList("\u2B06")),
+        DOWN(Collections.singletonList(	"\u2B07"));
 
         private final List<String> emojis;
         private final List<Long> ids;
@@ -74,6 +65,7 @@ public class AllReactables {
             this.ids = new ArrayList<>();
         }
 
+        // this is for external emojis
         Reactable(List<String> emojis, List<Long> ids) {
             this.emojis = emojis;
             this.ids = ids;
