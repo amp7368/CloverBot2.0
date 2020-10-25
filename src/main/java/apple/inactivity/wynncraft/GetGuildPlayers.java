@@ -62,7 +62,6 @@ public class GetGuildPlayers {
     }
 
     public static PlayerWithInactivity getPlayer(String uuid, String rank) {
-        System.out.println("getting");
         try {
             InputStreamReader url = new InputStreamReader(new URL(String.format(Links.PLAYER_STATS, uuid)).openConnection().getInputStream());
             JSONParser parser = new JSONParser();

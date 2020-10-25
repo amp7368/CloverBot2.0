@@ -24,6 +24,7 @@ import java.util.List;
 public class DiscordBot extends ListenerAdapter {
     public static final String PREFIX = "c!";
     public static final long APPLEPTR16 = 253646208084475904L;
+    public static final long LOGGING_CHANNEL = 769737908293992509L;
 
     public static String discordToken; // my bot
     public static JDA client;

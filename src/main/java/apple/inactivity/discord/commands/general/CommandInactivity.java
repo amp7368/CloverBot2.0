@@ -3,6 +3,7 @@ package apple.inactivity.discord.commands.general;
 import apple.inactivity.GuildListThread;
 import apple.inactivity.Pretty;
 import apple.inactivity.data.PlayerWithInactivity;
+import apple.inactivity.discord.SendLogs;
 import apple.inactivity.discord.commands.Commands;
 import apple.inactivity.discord.reactions.InactivityMessage;
 import apple.inactivity.wynncraft.GetGuildPlayers;
@@ -42,5 +43,6 @@ public class CommandInactivity extends Thread {
         Message message = event.getChannel().sendMessage(Pretty.getProgress(0)).complete();
         @Nullable List<PlayerWithInactivity> playersInGuild = GetGuildPlayers.getGuildPlayers(guildName, message);
         new InactivityMessage(guildName, playersInGuild, message);
+        SendLogs.log("Inactivity", String.format("*%s* has requested '%s'", event.getAuthor().getAsTag(), event.getMessage().getContentDisplay()));
     }
 }
