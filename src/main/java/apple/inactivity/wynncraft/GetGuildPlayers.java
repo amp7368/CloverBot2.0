@@ -75,7 +75,6 @@ public class GetGuildPlayers {
             }
             return new PlayerWithInactivity(userName, lastJoined, rank, uuid);
         } catch (IOException | ParseException e) {
-            e.printStackTrace();
             return null;
         }
 

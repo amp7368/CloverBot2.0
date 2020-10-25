@@ -59,7 +59,7 @@ public class DiscordBot extends ListenerAdapter {
         JDABuilder builder = JDABuilder.createDefault(discordToken);
         builder.addEventListeners(this);
         client = builder.build();
-        client.getPresence().setPresence(Activity.playing("dm appleptr16#5054 with ideas for new features"), false);
+        client.getPresence().setPresence(Activity.playing(Commands.HELP.getBareUsageMessage()), false);
     }
 
     @Override
@@ -75,8 +75,8 @@ public class DiscordBot extends ListenerAdapter {
         if (event.getChannelType() != ChannelType.TEXT) {
             return;
         }
+        legacy(event);
         // the author is not a bot
-
         String messageContent = event.getMessage().getContentStripped().toLowerCase();
         // deal with the different commands
         for (Commands command : Commands.values()) {
@@ -84,6 +84,13 @@ public class DiscordBot extends ListenerAdapter {
                 command.run(event);
                 return;
             }
+        }
+    }
+
+    private void legacy(MessageReceivedEvent event) {
+        String messageContent = event.getMessage().getContentStripped().toLowerCase();
+        if (messageContent.startsWith("$inactivity")) {
+            event.getChannel().sendMessage("This is no longer a supported command. Try doing c!inactivity or c!activity").queue();
         }
     }
 

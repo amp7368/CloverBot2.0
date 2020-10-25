@@ -9,5 +9,6 @@ public class CloverMain {
         DiscordBot bot = new DiscordBot();
         bot.enableDiscord();
         new GuildListThread().start();
+        System.out.println("CloverBot started");
     }
 }

@@ -1,7 +1,5 @@
 package apple.inactivity;
 
-import apple.inactivity.wynncraft.GetGuildPlayers;
-
 public class Pretty {
     private static final int NUM_OF_CHARS_PROGRESS = 40;
 

@@ -22,9 +22,16 @@ public class InactivityMessage implements ReactableMessage {
     public InactivityMessage(String guildName, @Nullable List<PlayerWithInactivity> playersInGuild, Message progressMessage) {
         this.guildName = guildName;
         this.playersInGuild = playersInGuild;
-        this.playersInGuild.sort((p1, p2) -> (int) (p1.lastJoined - p2.lastJoined));
+        if (this.playersInGuild != null)
+            this.playersInGuild.sort((p1, p2) -> {
+                long time = (p1.lastJoined - p2.lastJoined);
+                if (time > 0) return 1;
+                else if (time == 0) return 0;
+                return -1;
+            });
         this.message = progressMessage;
         this.message.editMessage(makeMessage()).queue();
+        if (this.playersInGuild == null) return;
         AllReactables.add(this);
         this.message.addReaction(AllReactables.Reactable.LEFT.getFirstEmoji()).queue();
         this.message.addReaction(AllReactables.Reactable.RIGHT.getFirstEmoji()).queue();
@@ -34,6 +41,9 @@ public class InactivityMessage implements ReactableMessage {
     }
 
     private String makeMessage() {
+        if (playersInGuild == null) {
+            return "That guild was not found.";
+        }
         StringBuilder text = new StringBuilder();
         text.append("```ml\n");
         text.append(String.format("|%5s %-30s| %-25s| %-25s|\n", "", guildName + " Members", "Rank", "Time Inactive"));
@@ -93,13 +103,23 @@ public class InactivityMessage implements ReactableMessage {
 
     private void orderDown() {
         page = 0;
-        this.playersInGuild.sort((p1, p2) -> (int) (p2.lastJoined - p1.lastJoined));
+        this.playersInGuild.sort((p1, p2) -> {
+            long time = (p2.lastJoined - p1.lastJoined);
+            if (time > 0) return 1;
+            else if (time == 0) return 0;
+            return -1;
+        });
         message.editMessage(makeMessage()).queue();
     }
 
     private void orderUp() {
         page = 0;
-        this.playersInGuild.sort((p1, p2) -> (int) (p1.lastJoined - p2.lastJoined));
+        this.playersInGuild.sort((p1, p2) -> {
+            long time = (p1.lastJoined - p2.lastJoined);
+            if (time > 0) return 1;
+            else if (time == 0) return 0;
+            return -1;
+        });
         message.editMessage(makeMessage()).queue();
     }
 
