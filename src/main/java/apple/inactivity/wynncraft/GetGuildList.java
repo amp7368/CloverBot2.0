@@ -25,7 +25,7 @@ public class GetGuildList {
                 guildList.add(guild.toString());
             }
             return guildList;
-        } catch (IOException | ParseException e) {
+        } catch (IOException | ParseException| ClassCastException e) {
             e.printStackTrace();
             return Collections.emptySet();
         }

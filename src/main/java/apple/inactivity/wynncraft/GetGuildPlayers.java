@@ -54,7 +54,7 @@ public class GetGuildPlayers {
                 players.removeIf(Objects::isNull);
                 isLocked = false;
                 return players;
-            } catch (IOException | NullPointerException | ParseException e) {
+            } catch (IOException | NullPointerException | ParseException| ClassCastException e) {
                 isLocked = false;
                 return null;
             }

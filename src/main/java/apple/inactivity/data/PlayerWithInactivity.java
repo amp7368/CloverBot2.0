@@ -20,7 +20,7 @@ public class PlayerWithInactivity {
     public long lastJoined;
     public String username;
     public String rank;
-    private long timeRetrieved;
+    private final long timeRetrieved;
 
     public PlayerWithInactivity(String userName, String lastJoined, String rank, String uuid) {
         try {

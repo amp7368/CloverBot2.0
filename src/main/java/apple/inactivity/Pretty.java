@@ -1,5 +1,7 @@
 package apple.inactivity;
 
+import java.text.NumberFormat;
+
 public class Pretty {
     private static final int NUM_OF_CHARS_PROGRESS = 40;
 
@@ -27,4 +29,9 @@ public class Pretty {
         if (s.length() > limit) return s.substring(0, limit - 3) + "...";
         return s;
     }
+
+    public static String commas(long n) {
+        return NumberFormat.getIntegerInstance().format(n);
+    }
+
 }
