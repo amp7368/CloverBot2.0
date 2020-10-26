@@ -17,7 +17,7 @@ import static apple.inactivity.discord.reactions.InactivityMessage.MILLIS_IN_DAY
 public class StatsMessage implements ReactableMessage {
     private static final Map<String, Integer> rankColors = new HashMap<>() {
         {
-            put("DEFAULT", 0x0);
+            put("DEFAULT", 0x656665);
             put("HERO", 0xba36d1);
             put("VIP+", 0x21ccd9);
             put("VIP", 0X36d158);
@@ -35,7 +35,7 @@ public class StatsMessage implements ReactableMessage {
 
     private MessageEmbed makeMessage() {
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle(String.format("%s [%s]", player.userName, Pretty.uppercaseFirst(player.rank == null ? "" : player.rank)));
+        embed.setTitle(String.format("%s %s", player.userName, Pretty.uppercaseFirst(player.rank == null ? "" : String.format("[%s]", player.rank))));
         switch (page) {
             case 0:
                 embed.setDescription(buildPage1());
