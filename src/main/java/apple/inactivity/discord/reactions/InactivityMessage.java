@@ -2,6 +2,8 @@ package apple.inactivity.discord.reactions;
 
 import apple.inactivity.Pretty;
 import apple.inactivity.data.PlayerWithInactivity;
+import apple.inactivity.discord.DiscordBot;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;

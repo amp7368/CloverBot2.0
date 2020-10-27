@@ -16,9 +16,9 @@ import static apple.inactivity.discord.DiscordBot.PREFIX;
 public enum Commands {
     INACTIVITY(Arrays.asList("inactivity", "activity"), "Gives a message of inactivity for a guild", "[guild]", CommandInactivity::new),
     SUGGEST(Collections.singletonList("suggest"), "Suggests an idea to appleptr16", "[message]", CommandSuggest::dealWithCommand),
+    BUG(Collections.singletonList("bug"), "Reports a bug to appleptr16", "[message]", CommandSuggest::dealWithCommand),
     HELP(Collections.singletonList("help"), "Gives a help message", "", CommandHelp::dealWithCommand),
-    STATS(Collections.singletonList("stats"),"Gives some stats about the player" ,"[player_name or uuid]" , CommandStats::dealWithCommand );
-
+    STATS(Collections.singletonList("stats"), "Gives some stats about the player", "[player_name or uuid]", CommandStats::dealWithCommand);
     private final List<String> commandNames;
     private final String helpMessage;
     private final String usageMessage;
