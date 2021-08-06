@@ -1,6 +1,6 @@
 package apple.inactivity.wynncraft;
 
-import apple.inactivity.Links;
+import apple.inactivity.utils.Links;
 import apple.inactivity.data.PlayerData;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

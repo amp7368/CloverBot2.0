@@ -1,20 +1,21 @@
 package apple.inactivity.discord.reactions;
 
-import apple.inactivity.Pretty;
+import apple.discord.acd.ACD;
+import apple.discord.acd.reaction.gui.ACDGuiPageable;
+import apple.inactivity.utils.Pretty;
 import apple.inactivity.data.PlayerData;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static apple.inactivity.discord.reactions.InactivityMessage.MILLIS_IN_DAY;
+import static apple.inactivity.discord.reactions.MessageInactivity.MILLIS_IN_DAY;
 
-public class StatsMessage implements ReactableMessage {
+public class MessageStats extends ACDGuiPageable {
     private static final Map<String, Integer> rankColors = new HashMap<>() {
         {
             put("DEFAULT", 0x656665);
@@ -23,17 +24,19 @@ public class StatsMessage implements ReactableMessage {
             put("VIP", 0X36d158);
         }
     };
-    private Message message;
-    private PlayerData player;
-    private int page = 0;
-    private long lastUpdated = System.currentTimeMillis();
+    private final PlayerData player;
 
-    public StatsMessage(PlayerData player, MessageChannel channel) {
+    public MessageStats(ACD acd, PlayerData player, MessageChannel channel) {
+        super(acd, channel);
         this.player = player;
-        message = channel.sendMessage(makeMessage()).complete();
     }
 
-    private MessageEmbed makeMessage() {
+    @Override
+    protected long getMillisToOld() {
+        return 0;
+    }
+
+    public Message makeMessage() {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle(String.format("%s %s", player.userName, Pretty.uppercaseFirst(player.rank == null ? "" : String.format("[%s]", player.rank))));
         switch (page) {
@@ -41,7 +44,7 @@ public class StatsMessage implements ReactableMessage {
                 embed.setDescription(buildPage1());
         }
         embed.setColor(rankColors.get(Objects.requireNonNullElse(player.rank, "DEFAULT")));
-        return embed.build();
+        return new MessageBuilder(embed.build()).build();
     }
 
     private String buildPage1() {
@@ -56,19 +59,13 @@ public class StatsMessage implements ReactableMessage {
         return text.toString();
     }
 
-
     @Override
-    public void dealWithReaction(AllReactables.Reactable reactable, String reaction, MessageReactionAddEvent event) {
-
-    }
-
-    @Override
-    public Long getId() {
+    public long getId() {
         return message.getIdLong();
     }
 
     @Override
-    public long getLastUpdated() {
-        return lastUpdated;
+    protected int getMaxPages() {
+        return 1;
     }
 }

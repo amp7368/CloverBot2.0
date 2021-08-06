@@ -8,8 +8,6 @@ group 'org.example'
 version '1.0-SNAPSHOT'
 
 mainClassName = 'apple.inactivity.CloverMain'
-sourceCompatibility = 1.11
-targetCompatibility = 1.11
 version = '1.0'
 
 jar {
@@ -20,13 +18,22 @@ jar {
 
 repositories {
     mavenCentral()
-    jcenter()
+    maven {
+        name 'm2-dv8tion'
+        url 'https://m2.dv8tion.net/releases'
+    }
+    flatDir {
+        dirs 'lib'
+    }
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    implementation 'net.dv8tion:JDA:4.2.0_210'
-    implementation 'com.googlecode.json-simple:json-simple:1.1'
+    implementation 'org.xerial:sqlite-jdbc:3.36.0.1'
+    implementation 'net.dv8tion:JDA:4.3.0_304'
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation 'apple.acd:DiscordACD:1.0.BUILD-SNAPSHOT'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
 project.buildDir("C:\\Users\\Aaron\\Desktop\\bots\\cloverBot")

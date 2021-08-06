@@ -1,13 +1,13 @@
 package apple.inactivity.data;
 
-import apple.inactivity.GetFromObject;
+import apple.inactivity.utils.GetFromObject;
 import org.json.simple.JSONObject;
 
 import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import static apple.inactivity.discord.reactions.InactivityMessage.MILLIS_IN_DAY;
+import static apple.inactivity.discord.reactions.MessageInactivity.MILLIS_IN_DAY;
 
 public class PlayerData {
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");

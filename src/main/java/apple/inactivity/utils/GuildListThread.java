@@ -1,4 +1,4 @@
-package apple.inactivity;
+package apple.inactivity.utils;
 
 import apple.inactivity.wynncraft.GetGuildList;
 

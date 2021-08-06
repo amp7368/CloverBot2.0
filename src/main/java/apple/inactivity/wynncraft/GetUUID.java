@@ -1,6 +1,6 @@
 package apple.inactivity.wynncraft;
 
-import apple.inactivity.Links;
+import apple.inactivity.utils.Links;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;

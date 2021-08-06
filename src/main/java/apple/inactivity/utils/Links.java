@@ -1,4 +1,4 @@
-package apple.inactivity;
+package apple.inactivity.utils;
 
 public class Links {
     public static final String GUILD_LIST = "https://api.wynncraft.com/public_api.php?action=guildList";

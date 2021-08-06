@@ -1,8 +1,8 @@
 package apple.inactivity.wynncraft;
 
-import apple.inactivity.GuildListThread;
-import apple.inactivity.Links;
-import apple.inactivity.Pretty;
+import apple.inactivity.utils.GuildListThread;
+import apple.inactivity.utils.Links;
+import apple.inactivity.utils.Pretty;
 import apple.inactivity.data.PlayerWithInactivity;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.Nullable;

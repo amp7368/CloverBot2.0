@@ -1,4 +1,4 @@
-package apple.inactivity;
+package apple.inactivity.utils;
 
 import java.text.NumberFormat;
 
