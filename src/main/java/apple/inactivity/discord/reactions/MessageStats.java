@@ -2,8 +2,8 @@ package apple.inactivity.discord.reactions;
 
 import apple.discord.acd.ACD;
 import apple.discord.acd.reaction.gui.ACDGuiPageable;
-import apple.inactivity.utils.Pretty;
 import apple.inactivity.data.PlayerData;
+import apple.inactivity.utils.Pretty;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -62,10 +62,5 @@ public class MessageStats extends ACDGuiPageable {
     @Override
     public long getId() {
         return message.getIdLong();
-    }
-
-    @Override
-    protected int getMaxPages() {
-        return 1;
     }
 }

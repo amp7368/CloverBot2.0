@@ -1,23 +1,21 @@
 package apple.inactivity.discord.reactions;
 
 import apple.discord.acd.ACD;
+import apple.discord.acd.MillisTimeUnits;
 import apple.discord.acd.reaction.DiscordEmoji;
 import apple.discord.acd.reaction.buttons.GuiReactionEmoji;
-import apple.discord.acd.reaction.gui.ACDGui;
 import apple.discord.acd.reaction.gui.ACDGuiEntryList;
 import apple.discord.acd.reaction.gui.GuiEntryBorder;
-import apple.inactivity.utils.Pretty;
 import apple.inactivity.data.PlayerWithInactivity;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
 @GuiEntryBorder
-public class MessageInactivity extends ACDGuiEntryList<PlayerWithInactivity> {
+public class MessageInactivity extends ACDGuiEntryList {
     private static final int ENTRIES_PER_PAGE = 15;
     public static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
     private int page = 0;
@@ -28,7 +26,7 @@ public class MessageInactivity extends ACDGuiEntryList<PlayerWithInactivity> {
     private long lastUpdated = System.currentTimeMillis();
 
     public MessageInactivity(ACD acd, String guildName, @Nullable List<PlayerWithInactivity> playersInGuild, Message progressMessage) {
-        super(acd, progressMessage, playersInGuild);
+        super(acd, progressMessage);
         this.guildName = guildName;
         this.playersInGuild = playersInGuild;
         if (this.playersInGuild != null)
@@ -40,7 +38,7 @@ public class MessageInactivity extends ACDGuiEntryList<PlayerWithInactivity> {
             });
         this.message = progressMessage;
         if (this.playersInGuild == null) return;
-        this.border = String.format("```ml\n|%5s %-30s| %-25s| %-25s|", "", guildName + " Members", "Rank", "Time Inactive");
+        String.format("```ml\n|%5s %-30s| %-25s| %-25s|", "", guildName + " Members", "Rank", "Time Inactive");
     }
 
     @Override
@@ -51,38 +49,38 @@ public class MessageInactivity extends ACDGuiEntryList<PlayerWithInactivity> {
         this.message.addReaction(DiscordEmoji.DOWN.getEmoji()).queue();
     }
 
-    @Override
-    protected int getEntriesPerPage() {
-        return 15;
-    }
-
-    @Override
-    protected int getEntriesPerSection() {
-        return 5;
-    }
+//    @Override
+//    protected int getEntriesPerPage() {
+//        return 15;
+//    }
+//
+//    @Override
+//    protected int getEntriesPerSection() {
+//        return 5;
+//    }
 
     @Override
     protected long getMillisToOld() {
-        return 0;
+        return MillisTimeUnits.MINUTE_15;
     }
 
-    @Override
-    protected int getFirstDashIndex() {
-        return 0;
-    }
+//    @Override
+//    protected int getFirstDashIndex() {
+//        return 0;
+//    }
 
     @Override
-    protected Message makeMessage() {
+    public Message makeMessage() {
         if (this.playersInGuild == null) {
             return new MessageBuilder("That guild was not found").build();
         }
         return super.makeMessage();
     }
 
-    @Override
-    protected String getDivider() {
-        return "+" + "-".repeat(36) + "+" + "-".repeat(26) + "+" + "-".repeat(26) + "+";
-    }
+//    @Override
+//    protected String getDivider() {
+//        return "+" + "-".repeat(36) + "+" + "-".repeat(26) + "+" + "-".repeat(26) + "+";
+//    }
 
 
     @GuiReactionEmoji(emote = DiscordEmoji.DOWN)

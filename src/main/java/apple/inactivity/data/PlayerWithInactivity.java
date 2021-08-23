@@ -1,6 +1,6 @@
 package apple.inactivity.data;
 
-import apple.discord.acd.reaction.buttons.GuiEntryStringable;
+import apple.discord.acd.reaction.gui.GuiEntryStringable;
 import apple.inactivity.utils.Pretty;
 
 import java.text.ParseException;

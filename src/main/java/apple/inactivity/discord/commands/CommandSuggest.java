@@ -3,7 +3,7 @@ package apple.inactivity.discord.commands;
 import apple.discord.acd.ACD;
 import apple.discord.acd.command.ACDCommand;
 import apple.discord.acd.command.DiscordCommandAlias;
-import apple.discord.acd.command.ParameterSingle;
+import apple.discord.acd.parameters.ParameterSingle;
 import apple.inactivity.discord.DiscordBot;
 import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;

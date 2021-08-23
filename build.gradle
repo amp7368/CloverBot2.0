@@ -32,6 +32,7 @@ dependencies {
     implementation 'net.dv8tion:JDA:4.3.0_304'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'apple.acd:DiscordACD:1.0.BUILD-SNAPSHOT'
+    implementation 'apple.utilities:AppleUtilities:1.0.BUILD-SNAPSHOT-all'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }

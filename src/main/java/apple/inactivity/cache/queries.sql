@@ -30,3 +30,4 @@ from author
      (
          select * from message where channel_id = 850598624299450370 order by time_stamp
      ) m on m.author_id = author.author_id
+

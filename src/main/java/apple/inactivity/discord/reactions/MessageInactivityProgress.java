@@ -3,49 +3,71 @@ package apple.inactivity.discord.reactions;
 import apple.discord.acd.ACD;
 import apple.discord.acd.MillisTimeUnits;
 import apple.discord.acd.reaction.gui.ACDGui;
-import apple.inactivity.data.PlayerWithInactivity;
-import apple.inactivity.discord.commands.CommandInactivity;
-import apple.inactivity.utils.GuildListThread;
 import apple.inactivity.utils.Pretty;
-import apple.inactivity.wynncraft.GetGuildPlayers;
+import apple.inactivity.wynncraft.WynncraftService;
+import apple.inactivity.wynncraft.guild.WynnGuild;
+import apple.inactivity.wynncraft.guild.WynnGuildDatabase;
+import apple.inactivity.wynncraft.guild.WynnGuildHeader;
+import apple.inactivity.wynncraft.guild.WynnGuildMember;
+import apple.inactivity.wynncraft.player.WynnPlayer;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class MessageInactivityProgress extends ACDGui implements Runnable {
-    private final String guildName;
-    private ACD acd;
-    private MessageChannel channel;
+public class MessageInactivityProgress extends ACDGui {
+    private final WynnGuildHeader guildHeader;
+    private Member member;
+    private WynnGuild guild;
+    private List<WynnPlayer> members = new ArrayList<>();
 
-    public MessageInactivityProgress(ACD acd, MessageChannel channel, String guildName) {
+    public MessageInactivityProgress(ACD acd, MessageChannel channel, WynnGuildHeader guildHeader, Member member) {
         super(acd, channel);
-        this.acd = acd;
-        this.channel = channel;
-        List<String> guildMatches = GuildListThread.getGuildName(guildName);
-        // get the correct guild name String guildName = String.join(" ", content);
-        if (guildMatches.size() == 1) {
-            this.guildName = guildMatches.get(0);
-        } else if (guildMatches.isEmpty()) {
-            this.guildName = null;
-        } else {
-            // else try it with guildName, but tell the user if nothing happens
-            this.guildName = null;
-        }
+        this.guildHeader = guildHeader;
+        this.member = member;
+        WynncraftService.queue(WynncraftService.WynnRequestPriority.PRIMARY, guildHeader.name, wynnGuild -> {
+            synchronized (this) {
+                setGuild(wynnGuild);
+                editMessageOnTimer();
+            }
+            for (WynnGuildMember guildMember : List.of(wynnGuild.members)) {
+                if (guildMember != null) {
+                    @Nullable WynnPlayer player = WynnGuildDatabase.getPlayer(guildMember.uuid);
+                    if (player == null)
+                        WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, guildMember, this::addPlayer);
+                    else
+                        this.addPlayer(player);
+                }
+            }
+        });
     }
 
+    private void addPlayer(WynnPlayer member) {
+        synchronized (this) {
+            this.members.add(member);
+            editMessageOnTimer();
+        }
+        WynnGuildDatabase.addMember(member);
+    }
 
-    @Override
-    public void run() {
-        @Nullable List<PlayerWithInactivity> playersInGuild = GetGuildPlayers.getGuildPlayers(guildName, message);
-        remove();
-        new MessageInactivity(acd, guildName, playersInGuild, message).makeFirstMessage();
+    private void setGuild(WynnGuild wynnGuild) {
+        synchronized (this) {
+            this.guild = wynnGuild;
+        }
     }
 
     @Override
     protected void initButtons() {
-        new Thread(this).start();
+
+    }
+
+    @Override
+    protected long getMillisEditTimer() {
+        return MillisTimeUnits.SECOND * 3;
     }
 
     @Override
@@ -55,6 +77,7 @@ public class MessageInactivityProgress extends ACDGui implements Runnable {
 
     @Override
     protected Message makeMessage() {
-        return new MessageBuilder(Pretty.getProgress(0)).build();
+        double progress = this.members.size() / (double) (this.guild == null ? 1 : this.guild.members.length);
+        return new MessageBuilder(Pretty.getProgress(progress)).build();
     }
 }
