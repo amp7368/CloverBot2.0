@@ -4,7 +4,10 @@ import apple.inactivity.CloverMain;
 import apple.inactivity.wynncraft.FileIOService;
 import apple.inactivity.wynncraft.WynncraftService;
 import apple.inactivity.wynncraft.player.WynnPlayer;
+import apple.utilities.request.AppleJsonFromFile;
 import apple.utilities.request.AppleJsonToFile;
+import apple.utilities.request.AppleRequestService;
+import com.google.gson.reflect.TypeToken;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -58,6 +61,30 @@ public class WynnGuildDatabase {
         }
     }
 
+    public static void loadDatabase() {
+        File[] files = GUILD_FOLDER.listFiles();
+        if (files != null) {
+            AppleRequestService.RequestHandler<?>[] requests = new AppleRequestService.RequestHandler<?>[files.length];
+            int i = 0;
+            synchronized (instance) {
+                for (File file : files) {
+                    requests[i++] = FileIOService.get().queue(new AppleJsonFromFile<>(file, new TypeToken<HashMap<String, WynnGuildHeader>>() {
+                            }),
+                            (map) -> {
+                                synchronized (instance) {
+                                    for (WynnGuildHeader header : map.values()) {
+                                        get().guilds.put(header.name, header);
+                                    }
+                                }
+                            }
+                    );
+                }
+            }
+            for (i = 0; i < requests.length; i++) {
+                requests[i].completeAndRun();
+            }
+        }
+    }
 
     public static void setGuilds(String[] guilds) {
         synchronized (instance) {

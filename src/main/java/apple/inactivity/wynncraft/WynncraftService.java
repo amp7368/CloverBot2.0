@@ -5,13 +5,16 @@ import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuild;
 import apple.inactivity.wynncraft.guild.WynnGuildMember;
 import apple.inactivity.wynncraft.player.WynnPlayer;
+import apple.inactivity.wynncraft.player.WynnPlayerResponse;
 import apple.utilities.request.AppleJsonFromURL;
+import apple.utilities.request.AppleRequest;
 import apple.utilities.request.AppleRequestPriorityService;
 import apple.utilities.request.RequestLogger;
 import apple.utilities.request.settings.RequestPrioritySettingsBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -33,13 +36,17 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
                 WynnGuild.class).withGson(GSON), runAfter, settings);
     }
 
-    public static void queuePriority(WynnRequestPriority priority, WynnGuildMember guildMember, Consumer<WynnPlayer> runAfter) {
-        RequestPrioritySettingsBuilder<WynnPlayer, WynnRequestPriority> settings = get()
-                .<WynnPlayer>getDefaultPrioritySettings()
+    public static void queuePriority(WynnRequestPriority priority, WynnGuildMember guildMember, Consumer<@Nullable WynnPlayer> runAfter) {
+        RequestPrioritySettingsBuilder<WynnPlayerResponse, WynnRequestPriority> settings = get()
+                .<WynnPlayerResponse>getDefaultPrioritySettings()
                 .withPriority(priority)
-                .withPriorityRequestLogger(getLogger(guildMember.name));
+                .withPriorityRequestLogger(getLogger(String.format(Links.PLAYER_STATS, guildMember.uuid)));
         get().queuePriority(new AppleJsonFromURL<>(String.format(Links.PLAYER_STATS, guildMember.uuid),
-                WynnPlayer.class).withGson(GSON), runAfter, settings);
+                WynnPlayerResponse.class).withGson(GSON), (WynnPlayerResponse response) -> {
+            if (response == null || response.data.length == 0)
+                throw new AppleRequest.AppleRuntimeRequestException("Data does not exist");
+            runAfter.accept(response.data[0]);
+        }, settings);
     }
 
     @NotNull

@@ -2,120 +2,165 @@ package apple.inactivity.discord.reactions;
 
 import apple.discord.acd.ACD;
 import apple.discord.acd.MillisTimeUnits;
-import apple.discord.acd.reaction.DiscordEmoji;
-import apple.discord.acd.reaction.buttons.GuiReactionEmoji;
-import apple.discord.acd.reaction.gui.ACDGuiEntryList;
-import apple.discord.acd.reaction.gui.GuiEntryBorder;
-import apple.inactivity.data.PlayerWithInactivity;
+import apple.discord.acd.reaction.buttons.GuiButton;
+import apple.discord.acd.reaction.gui.*;
+import apple.inactivity.utils.Pretty;
+import apple.inactivity.wynncraft.guild.WynnGuildHeader;
+import apple.inactivity.wynncraft.player.WynnPlayer;
+import com.google.gson.Gson;
 import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.internal.interactions.ButtonImpl;
 
-import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@GuiEntryBorder
 public class MessageInactivity extends ACDGuiEntryList {
-    private static final int ENTRIES_PER_PAGE = 15;
-    public static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
-    private int page = 0;
-    private final String guildName;
-    private final List<PlayerWithInactivity> playersInGuild;
-    private final Message message;
-    private final long timeNow = System.currentTimeMillis();
-    private long lastUpdated = System.currentTimeMillis();
 
-    public MessageInactivity(ACD acd, String guildName, @Nullable List<PlayerWithInactivity> playersInGuild, Message progressMessage) {
-        super(acd, progressMessage);
-        this.guildName = guildName;
-        this.playersInGuild = playersInGuild;
-        if (this.playersInGuild != null)
-            this.playersInGuild.sort((p1, p2) -> {
-                long time = (p1.lastJoined - p2.lastJoined);
-                if (time > 0) return 1;
-                else if (time == 0) return 0;
-                return -1;
-            });
-        this.message = progressMessage;
-        if (this.playersInGuild == null) return;
-        String.format("```ml\n|%5s %-30s| %-25s| %-25s|", "", guildName + " Members", "Rank", "Time Inactive");
+    public static final Comparator<InactivityWynnPlayer> MEMBERS_COMPARATOR = (p1, p2) -> {
+        long time = (p1.player.meta.lastJoin.getTime() - p2.player.meta.lastJoin.getTime());
+        if (time > 0) return 1;
+        else if (time == 0) {
+            return p1.player.username.compareTo(p2.player.username);
+        }
+        return -1;
+    };
+    public static final Comparator<InactivityWynnPlayer> MEMBERS_COMPARATOR_REVERSED = MEMBERS_COMPARATOR.reversed();
+
+    private static final String TOP = "top";
+    private static final String DOWN = "down";
+    private static final String UP = "up";
+    private final Member discordMember;
+    private final WynnGuildHeader guildHeader;
+    private final List<WynnPlayer> members;
+    private boolean isReversed = false;
+
+
+    public MessageInactivity(ACD acd, Message message, Member discordMember, WynnGuildHeader guildHeader, List<WynnPlayer> members) {
+        super(acd, message);
+        this.discordMember = discordMember;
+        this.guildHeader = guildHeader;
+        this.members = members;
+        addPage(new MessageInactivityListPage(this, MEMBERS_COMPARATOR, 15));
     }
 
     @Override
-    protected void initButtons() {
-        super.initButtons();
-        this.message.addReaction(DiscordEmoji.TOP.getEmoji()).queue();
-        this.message.addReaction(DiscordEmoji.UP.getEmoji()).queue();
-        this.message.addReaction(DiscordEmoji.DOWN.getEmoji()).queue();
+    protected Collection<ActionRow> getNavigationRow() {
+        return Collections.singleton(ActionRow.of(this.getBackButton(), this.getForwardButton(), this.getTopButton(), this.getDownButton()));
     }
 
-//    @Override
-//    protected int getEntriesPerPage() {
-//        return 15;
-//    }
-//
-//    @Override
-//    protected int getEntriesPerSection() {
-//        return 5;
-//    }
+    @GuiButton(id = TOP)
+    public void onTop(ButtonClickEvent interaction) {
+        page = 0;
+        editAsReply(interaction);
+    }
+
+    @GuiButton(id = UP)
+    public void onReverse(ButtonClickEvent interaction) {
+        page = 0;
+        isReversed = !isReversed;
+        sort();
+        editAsReply(interaction);
+    }
+
+    private ButtonImpl getTopButton() {
+        return new ButtonImpl(TOP, "To page 1", ButtonStyle.PRIMARY, false, null);
+    }
+
+    private ButtonImpl getDownButton() {
+        return new ButtonImpl(UP, "Reverse sort", ButtonStyle.PRIMARY, false, null);
+    }
 
     @Override
     protected long getMillisToOld() {
         return MillisTimeUnits.MINUTE_15;
     }
 
-//    @Override
-//    protected int getFirstDashIndex() {
-//        return 0;
-//    }
+    private static class InactivityWynnPlayer implements GuiEntryStringable {
+        public WynnPlayer player;
 
-    @Override
-    public Message makeMessage() {
-        if (this.playersInGuild == null) {
-            return new MessageBuilder("That guild was not found").build();
+        public InactivityWynnPlayer(WynnPlayer player) {
+            this.player = player;
         }
-        return super.makeMessage();
+
+        @Override
+        public String asEntryString(int indexInPage, int indexInList) {
+            if (player.meta == null) {
+                System.out.println(new Gson().toJson(player));
+                return "";
+            }
+            long days = (player.timeRetrieved - player.meta.lastJoin.getTime()) / MillisTimeUnits.DAY;
+            String daysString;
+            if (days < 0)
+                daysString = "Error";
+            else
+                daysString = days + " day" + (days == 1 ? "" : "s");
+            return String.format("|%4d. %-30s| %-25s| %-25s|",
+                    indexInList + 1,
+                    Pretty.limit(player.username, 30),
+                    Pretty.uppercaseFirst(player.guildMember.rank),
+                    daysString);
+        }
     }
 
-//    @Override
-//    protected String getDivider() {
-//        return "+" + "-".repeat(36) + "+" + "-".repeat(26) + "+" + "-".repeat(26) + "+";
-//    }
+    public class MessageInactivityListPage extends ACDEntryPage<InactivityWynnPlayer> {
 
+        public MessageInactivityListPage(ACDGui parent, Comparator<InactivityWynnPlayer> sorter, int entriesPerPage) {
+            super(parent, sorter, entriesPerPage);
+            addAllEntry(members.stream().map(InactivityWynnPlayer::new).collect(Collectors.toList()));
+            sort();
+        }
 
-    @GuiReactionEmoji(emote = DiscordEmoji.DOWN)
-    public void orderDown(MessageReactionAddEvent event) {
-        page = 0;
-        this.playersInGuild.sort((p1, p2) -> {
-            long time = (p2.lastJoined - p1.lastJoined);
-            if (time > 0) return 1;
-            else if (time == 0) return 0;
-            return -1;
-        });
-        editMessage();
-    }
+        @Override
+        public void sort() {
+            setSorter(isReversed ? MEMBERS_COMPARATOR_REVERSED : MEMBERS_COMPARATOR);
+            super.sort();
+        }
 
-    @GuiReactionEmoji(emote = DiscordEmoji.UP)
-    public void orderUp(MessageReactionAddEvent event) {
-        page = 0;
-        this.playersInGuild.sort((p1, p2) -> {
-            long time = (p1.lastJoined - p2.lastJoined);
-            if (time > 0) return 1;
-            else if (time == 0) return 0;
-            return -1;
-        });
-        editMessage();
-    }
+        @Override
+        protected Message asMessage(List<GuiEntryNumbered<InactivityWynnPlayer>> entriesThisPage) {
+            StringBuilder content = new StringBuilder(String.format("```ml\n|%5s %-30s| %-25s| %-25s|\n", "", guildHeader.name + " Members", "Rank", "Time Inactive"));
+            for (int i = 0; i < entriesThisPage.size(); i++) {
+                String toAdd;
+                if ((i + getFirstDashIndex()) % getEntriesPerSection() == 0) {
+                    toAdd = getDivider();
+                    if (content.length() + toAdd.length() >= Message.MAX_CONTENT_LENGTH - 4) {
+                        break;
+                    }
+                    content.append(toAdd);
+                    content.append("\n");
+                }
+                GuiEntryNumbered<InactivityWynnPlayer> entryNumbered = entriesThisPage.get(i);
+                InactivityWynnPlayer entry = entryNumbered.entry();
 
-    @GuiReactionEmoji(emote = DiscordEmoji.TOP)
-    public void top(MessageReactionAddEvent event) {
-        page = 0;
-        editMessage();
-    }
+                toAdd = entry.asEntryString(i, entryNumbered.indexInList());
+                if (content.length() + toAdd.length() >= Message.MAX_CONTENT_LENGTH - 4) {
+                    break;
+                }
+                content.append(toAdd);
+                content.append("\n");
+            }
+            content.append("\n```");
+            return new MessageBuilder(content).build();
+        }
 
+        private int getEntriesPerSection() {
+            return 5;
+        }
 
-    @Override
-    public long getId() {
-        return message.getIdLong();
+        private int getFirstDashIndex() {
+            return 0;
+        }
+
+        protected String getDivider() {
+            return "+" + "-".repeat(36) + "+" + "-".repeat(26) + "+" + "-".repeat(26) + "+";
+        }
     }
 }

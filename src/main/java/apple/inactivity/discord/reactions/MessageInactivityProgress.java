@@ -21,14 +21,14 @@ import java.util.List;
 
 public class MessageInactivityProgress extends ACDGui {
     private final WynnGuildHeader guildHeader;
-    private Member member;
+    private final Member discordMember;
     private WynnGuild guild;
-    private List<WynnPlayer> members = new ArrayList<>();
+    private final List<WynnPlayer> members = new ArrayList<>();
 
-    public MessageInactivityProgress(ACD acd, MessageChannel channel, WynnGuildHeader guildHeader, Member member) {
+    public MessageInactivityProgress(ACD acd, MessageChannel channel, WynnGuildHeader guildHeader, Member discordMember) {
         super(acd, channel);
         this.guildHeader = guildHeader;
-        this.member = member;
+        this.discordMember = discordMember;
         WynncraftService.queue(WynncraftService.WynnRequestPriority.PRIMARY, guildHeader.name, wynnGuild -> {
             synchronized (this) {
                 setGuild(wynnGuild);
@@ -38,20 +38,28 @@ public class MessageInactivityProgress extends ACDGui {
                 if (guildMember != null) {
                     @Nullable WynnPlayer player = WynnGuildDatabase.getPlayer(guildMember.uuid);
                     if (player == null)
-                        WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, guildMember, this::addPlayer);
+                        WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, guildMember, member -> addPlayer(guildMember, member));
                     else
-                        this.addPlayer(player);
+                        this.addPlayer(guildMember, player);
                 }
             }
         });
     }
 
-    private void addPlayer(WynnPlayer member) {
+    private void addPlayer(WynnGuildMember guildMember, WynnPlayer player) {
         synchronized (this) {
-            this.members.add(member);
-            editMessageOnTimer();
+            this.members.add(player);
+            player.addGuildMemberInfo(guildMember);
+            int membersThere = this.members.size();
+            int membersRequired = this.guild == null ? 1 : this.guild.members.length;
+            if (membersThere >= membersRequired) {
+                remove();
+                new MessageInactivity(acd, message, this.discordMember, guildHeader, members).makeFirstMessage();
+            } else {
+                editMessageOnTimer();
+            }
         }
-        WynnGuildDatabase.addMember(member);
+        WynnGuildDatabase.addMember(player);
     }
 
     private void setGuild(WynnGuild wynnGuild) {
@@ -75,9 +83,13 @@ public class MessageInactivityProgress extends ACDGui {
         return MillisTimeUnits.MINUTE_15;
     }
 
+
     @Override
     protected Message makeMessage() {
-        double progress = this.members.size() / (double) (this.guild == null ? 1 : this.guild.members.length);
+        int membersThere = this.members.size();
+        int membersRequired = this.guild == null ? 1 : this.guild.members.length;
+        double progress = membersThere / (double) membersRequired;
+
         return new MessageBuilder(Pretty.getProgress(progress)).build();
     }
 }
