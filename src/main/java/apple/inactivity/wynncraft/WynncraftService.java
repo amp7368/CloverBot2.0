@@ -3,6 +3,7 @@ package apple.inactivity.wynncraft;
 import apple.discord.acd.MillisTimeUnits;
 import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuild;
+import apple.inactivity.wynncraft.guild.WynnGuildDatabase;
 import apple.inactivity.wynncraft.guild.WynnGuildMember;
 import apple.inactivity.wynncraft.player.WynnPlayer;
 import apple.inactivity.wynncraft.player.WynnPlayerResponse;
@@ -45,6 +46,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
                 WynnPlayerResponse.class).withGson(GSON), (WynnPlayerResponse response) -> {
             if (response == null || response.data.length == 0)
                 throw new AppleRequest.AppleRuntimeRequestException("Data does not exist");
+            WynnGuildDatabase.addMember(response.data[0]);
             runAfter.accept(response.data[0]);
         }, settings);
     }
@@ -54,7 +56,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
         return new RequestLogger<>() {
             @Override
             public void startRequest() {
-                System.out.println("Start request " + guild);
+                System.out.println("Start request '" + guild+"'");
             }
 
             @Override

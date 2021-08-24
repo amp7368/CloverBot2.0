@@ -1,4 +1,4 @@
-package apple.inactivity.discord.reactions;
+package apple.inactivity.discord.activity;
 
 import apple.discord.acd.ACD;
 import apple.discord.acd.MillisTimeUnits;
@@ -19,11 +19,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MessageInactivityProgress extends ACDGui {
-    private final WynnGuildHeader guildHeader;
-    private final Member discordMember;
+public abstract class MessageInactivityProgress extends ACDGui {
+    protected final WynnGuildHeader guildHeader;
+    protected final Member discordMember;
     private WynnGuild guild;
-    private final List<WynnPlayer> members = new ArrayList<>();
+    protected final List<WynnPlayer> members = new ArrayList<>();
 
     public MessageInactivityProgress(ACD acd, MessageChannel channel, WynnGuildHeader guildHeader, Member discordMember) {
         super(acd, channel);
@@ -54,13 +54,15 @@ public class MessageInactivityProgress extends ACDGui {
             int membersRequired = this.guild == null ? 1 : this.guild.members.length;
             if (membersThere >= membersRequired) {
                 remove();
-                new MessageInactivity(acd, message, this.discordMember, guildHeader, members).makeFirstMessage();
+                onFinishedProgress();
             } else {
                 editMessageOnTimer();
             }
         }
         WynnGuildDatabase.addMember(player);
     }
+
+    public abstract void onFinishedProgress();
 
     private void setGuild(WynnGuild wynnGuild) {
         synchronized (this) {

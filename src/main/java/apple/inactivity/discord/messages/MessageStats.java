@@ -1,4 +1,4 @@
-package apple.inactivity.discord.reactions;
+package apple.inactivity.discord.messages;
 
 import java.util.HashMap;
 import java.util.Map;

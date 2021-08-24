@@ -13,7 +13,7 @@ public class CommandSuggest extends ACDCommand {
         super(acd);
     }
 
-    @DiscordCommandAlias(alias = {"bug", "suggest"})
+    @DiscordCommandAlias(alias = {"suggest", "bug"})
     public void suggest(MessageReceivedEvent event, @ParameterSingle(usage = "[message]") String message) {
         PrivateChannel dms = DiscordBot.client.getUserById(DiscordBot.APPLEPTR16).openPrivateChannel().complete();
         dms.sendMessage("**" + event.getAuthor().getAsTag() + "** __sent you the following:__").queue();

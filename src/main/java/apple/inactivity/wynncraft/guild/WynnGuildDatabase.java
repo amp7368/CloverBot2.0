@@ -25,7 +25,7 @@ public class WynnGuildDatabase {
 
     private final Set<String> guildsRequestedToBeUpdated = new HashSet<>();
     private final Map<String, WynnPlayer> members = new HashMap<>();
-    private Map<String, WynnGuildHeader> guilds = new HashMap<>();
+    private final Map<String, WynnGuildHeader> guilds = new HashMap<>(20000);
 
     private static WynnGuildDatabase get() {
         return instance;
@@ -65,59 +65,56 @@ public class WynnGuildDatabase {
         File[] files = GUILD_FOLDER.listFiles();
         if (files != null) {
             AppleRequestService.RequestHandler<?>[] requests = new AppleRequestService.RequestHandler<?>[files.length];
-            int i = 0;
             synchronized (instance) {
-                for (File file : files) {
-                    requests[i++] = FileIOService.get().queue(new AppleJsonFromFile<>(file, new TypeToken<HashMap<String, WynnGuildHeader>>() {
-                            }),
-                            (map) -> {
-                                synchronized (instance) {
-                                    for (WynnGuildHeader header : map.values()) {
-                                        get().guilds.put(header.name, header);
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    if (!file.isDirectory()) {
+                        requests[i] = FileIOService.get().queue(new AppleJsonFromFile<>(file, new TypeToken<HashMap<String, WynnGuildHeader>>() {
+                                }),
+                                (map) -> {
+                                    synchronized (instance) {
+                                        for (Map.Entry<String, WynnGuildHeader> header : map.entrySet()) {
+                                            get().guilds.put(header.getKey(), header.getValue());
+                                        }
                                     }
                                 }
-                            }
-                    );
+                        );
+                    }
                 }
             }
-            for (i = 0; i < requests.length; i++) {
-                requests[i].completeAndRun();
+            for (AppleRequestService.RequestHandler<?> request : requests) {
+                if (request != null) request.completeAndRun();
             }
         }
     }
 
     public static void setGuilds(String[] guilds) {
         synchronized (instance) {
-            Map<String, WynnGuildHeader> wynncraftGuilds = new HashMap<>();
+            int i = 0, j = 0;
             for (String guild : guilds) {
                 WynnGuildHeader guildHeader = get().guilds.get(guild);
                 if (guildHeader == null) {
-                    guildHeader = new WynnGuildHeader(guild);
-                    wynncraftGuilds.putIfAbsent(guild, guildHeader);
+                    i++;
+                    get().guilds.put(guild, new WynnGuildHeader(guild));
                     if (get().guildsRequestedToBeUpdated.add(guild)) {
-                        File file = new File(GUILD_FOLDER, guild.charAt(0) + "-guilds.json");
                         WynncraftService.queue(WynncraftService.WynnRequestPriority.BACKGROUND, guild, (wynnGuild) -> {
                             addGuild(wynnGuild);
-                            HashMap<String, WynnGuildHeader> headersToSave = getHeaders(String.valueOf(wynnGuild.name.charAt(0)));
+
+                            HashMap<String, WynnGuildHeader> headersToSave = getHeaders();
+                            File file = new File(GUILD_FOLDER, "guilds_all.json");
                             FileIOService.get().queueVoid(new AppleJsonToFile(file, headersToSave));
                         });
                     }
+                } else {
+                    j++;
                 }
-                wynncraftGuilds.put(guildHeader.name, guildHeader);
             }
-            get().guilds = wynncraftGuilds;
         }
-        System.out.println("done setting guilds");
     }
 
-    private static HashMap<String, WynnGuildHeader> getHeaders(String startingLetter) {
+    private static HashMap<String, WynnGuildHeader> getHeaders() {
         synchronized (instance) {
-            HashMap<String, WynnGuildHeader> headers = new HashMap<>();
-            for (WynnGuildHeader guild : get().guilds.values()) {
-                if (guild.name.startsWith(startingLetter))
-                    headers.put(guild.name, guild);
-            }
-            return headers;
+            return new HashMap<>(get().guilds);
         }
     }
 
@@ -145,6 +142,12 @@ public class WynnGuildDatabase {
                 return null;
             }
             return member;
+        }
+    }
+
+    public static int getSize() {
+        synchronized (instance) {
+            return get().guilds.size();
         }
     }
 }

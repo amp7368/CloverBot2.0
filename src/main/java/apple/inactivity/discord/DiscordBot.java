@@ -3,15 +3,19 @@ package apple.inactivity.discord;
 import apple.discord.acd.ACD;
 import apple.inactivity.CloverMain;
 import apple.inactivity.cache.SqlDiscordCache;
-import apple.inactivity.discord.commands.CommandInactivity;
+import apple.inactivity.discord.activity.CommandInactivity;
+import apple.inactivity.discord.changelog.ChangelogDatabase;
+import apple.inactivity.discord.changelog.MessageChangelog;
 import apple.inactivity.discord.commands.CommandStats;
 import apple.inactivity.discord.commands.CommandSuggest;
+import apple.inactivity.discord.help.CommandHelp;
+import apple.inactivity.utils.Pretty;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.user.UserTypingEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -73,9 +77,20 @@ public class DiscordBot extends ListenerAdapter {
         client = builder.build();
         client.getPresence().setPresence(Activity.playing(PREFIX + "help"), false);
         ACD = new ACD(PREFIX, client);
+        ACD.getCommandLogger().addLogger((event, response) -> {
+            String userTag = event.getAuthor().getAsTag();
+            String content = event.getMessage().getContentDisplay();
+            String guildName = event.getGuild().getName();
+            if (!ChangelogDatabase.hasHeardChangelog(event.getAuthor().getIdLong())) {
+                new MessageChangelog(ACD, event.getChannel()).makeFirstMessage();
+                ChangelogDatabase.addMember(event.getAuthor());
+            }
+            SendLogs.log(Pretty.uppercaseFirst(response.getCommandAlias()), String.format("*%s* has requested '%s' in the %s server", userTag, content, guildName));
+        });
         new CommandInactivity(ACD);
         new CommandStats(ACD);
         new CommandSuggest(ACD);
+        new CommandHelp(ACD);
     }
 
     @Override

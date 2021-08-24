@@ -2,6 +2,7 @@ package apple.inactivity.wynncraft.guild;
 
 import com.google.gson.annotations.Expose;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class WynnGuildHeader {
@@ -25,11 +26,11 @@ public class WynnGuildHeader {
     }
 
     public boolean matchesTag(String guildName) {
-        return prefix !=null && prefix.equals(guildName);
+        return prefix != null && prefix.equals(guildName);
     }
 
     public boolean matchesTagIgnoreCase(String guildName) {
-        return prefix !=null && prefix.equalsIgnoreCase(guildName);
+        return prefix != null && prefix.equalsIgnoreCase(guildName);
     }
 
     private void verifyPattern() {
@@ -52,5 +53,27 @@ public class WynnGuildHeader {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.name, this.prefix);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof WynnGuildHeader other) {
+            return this.name.equals(other.name);
+//            return this.name.equals(other.name) && this.prefix.equals(other.prefix);
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "WynnGuildHeader{" +
+                "name='" + name + '\'' +
+                ", prefix='" + prefix + '\'' +
+                '}';
     }
 }

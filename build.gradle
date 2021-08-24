@@ -15,6 +15,9 @@ jar {
         attributes 'Main-Class': 'apple.inactivity.CloverMain'
     }
 }
+configurations.all {
+    resolutionStrategy.cacheDynamicVersionsFor(20, 'seconds')
+}
 
 repositories {
     mavenCentral()
