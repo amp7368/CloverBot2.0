@@ -5,7 +5,7 @@ import java.util.Date;
 public class WynnPlayerMeta {
     public Date firstJoin;
     public Date lastJoin;
-    public long playtime;
+    public long playtime; //hours
     public WynnPlayerTag tag;
 
     public static class WynnPlayerTag {

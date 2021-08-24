@@ -1,6 +1,5 @@
 package apple.inactivity.discord.activity;
 
-import apple.discord.acd.MillisTimeUnits;
 import apple.discord.acd.reaction.gui.GuiEntryStringable;
 import apple.inactivity.utils.Pretty;
 import apple.inactivity.wynncraft.player.WynnPlayer;
@@ -14,7 +13,7 @@ public class InactivityWynnPlayer implements GuiEntryStringable {
 
     @Override
     public String asEntryString(int indexInPage, int indexInList) {
-        long days = (player.timeRetrieved - player.meta.lastJoin.getTime()) / MillisTimeUnits.DAY;
+        long days = player.inactivity();
         String daysString;
         if (days < 0)
             daysString = "Error";

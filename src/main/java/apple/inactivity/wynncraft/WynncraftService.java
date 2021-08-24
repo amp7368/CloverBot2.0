@@ -4,7 +4,6 @@ import apple.discord.acd.MillisTimeUnits;
 import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuild;
 import apple.inactivity.wynncraft.guild.WynnGuildDatabase;
-import apple.inactivity.wynncraft.guild.WynnGuildMember;
 import apple.inactivity.wynncraft.player.WynnPlayer;
 import apple.inactivity.wynncraft.player.WynnPlayerResponse;
 import apple.utilities.request.AppleJsonFromURL;
@@ -37,12 +36,12 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
                 WynnGuild.class).withGson(GSON), runAfter, settings);
     }
 
-    public static void queuePriority(WynnRequestPriority priority, WynnGuildMember guildMember, Consumer<@Nullable WynnPlayer> runAfter) {
+    public static void queuePriority(WynnRequestPriority priority, String guildMember, Consumer<@Nullable WynnPlayer> runAfter) {
         RequestPrioritySettingsBuilder<WynnPlayerResponse, WynnRequestPriority> settings = get()
                 .<WynnPlayerResponse>getDefaultPrioritySettings()
                 .withPriority(priority)
-                .withPriorityRequestLogger(getLogger(String.format(Links.PLAYER_STATS, guildMember.uuid)));
-        get().queuePriority(new AppleJsonFromURL<>(String.format(Links.PLAYER_STATS, guildMember.uuid),
+                .withPriorityRequestLogger(getLogger(String.format(Links.PLAYER_STATS, guildMember)));
+        get().queuePriority(new AppleJsonFromURL<>(String.format(Links.PLAYER_STATS, guildMember),
                 WynnPlayerResponse.class).withGson(GSON), (WynnPlayerResponse response) -> {
             if (response == null || response.data.length == 0)
                 throw new AppleRequest.AppleRuntimeRequestException("Data does not exist");

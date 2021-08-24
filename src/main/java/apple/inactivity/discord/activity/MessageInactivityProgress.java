@@ -38,7 +38,7 @@ public abstract class MessageInactivityProgress extends ACDGui {
                 if (guildMember != null) {
                     @Nullable WynnPlayer player = WynnGuildDatabase.getPlayer(guildMember.uuid);
                     if (player == null)
-                        WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, guildMember, member -> addPlayer(guildMember, member));
+                        WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, guildMember.uuid, member -> addPlayer(guildMember, member));
                     else
                         this.addPlayer(guildMember, player);
                 }
