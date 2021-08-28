@@ -8,7 +8,6 @@ public class Links {
 
     public static String splitUUID(String uuid) {
         StringBuilder split = new StringBuilder();
-        System.out.println(uuid.length());
         if (uuid.length() != 32) {
             return uuid;
         }
@@ -21,7 +20,6 @@ public class Links {
         split.append(uuid, 16, 20);
         split.append('-');
         split.append(uuid, 20, 32);
-        System.out.println(split);
         return split.toString();
     }
 }

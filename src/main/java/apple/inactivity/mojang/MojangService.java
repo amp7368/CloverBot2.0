@@ -3,11 +3,12 @@ package apple.inactivity.mojang;
 import apple.discord.acd.MillisTimeUnits;
 import apple.inactivity.utils.Links;
 import apple.utilities.request.AppleJsonFromURL;
+import apple.utilities.request.AppleRequest;
 import apple.utilities.request.AppleRequestPriorityService;
 import apple.utilities.request.AppleRequestService;
 import apple.utilities.request.settings.RequestPrioritySettingsBuilder;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class MojangService extends AppleRequestPriorityService<MojangService.MojangPriority> {
     private static final MojangService instance = new MojangService();
@@ -16,9 +17,13 @@ public class MojangService extends AppleRequestPriorityService<MojangService.Moj
         return instance;
     }
 
-    public static AppleRequestService.RequestHandler<ResponseUUID> getUUID(String playerName, Consumer<String> uuidConsumer, RequestPrioritySettingsBuilder<ResponseUUID, MojangPriority> settings) {
-        return get().queue(new AppleJsonFromURL<>(String.format(Links.GET_UUID, playerName), ResponseUUID.class),
-                responseUUID -> uuidConsumer.accept(responseUUID.id),
+    public static AppleRequestService.RequestHandler<ResponseUUID> getUUID(String playerName, BiConsumer<String, String> uuidAndNameConsumer, RequestPrioritySettingsBuilder<ResponseUUID, MojangPriority> settings) {
+        return get().queuePriority(new AppleJsonFromURL<>(String.format(Links.GET_UUID, playerName), ResponseUUID.class),
+                responseUUID -> {
+                    if (responseUUID == null || responseUUID.id == null)
+                        throw new AppleRequest.AppleRuntimeRequestException("no uuid for username");
+                    uuidAndNameConsumer.accept(responseUUID.id, responseUUID.name);
+                },
                 settings);
     }
 
@@ -61,7 +66,7 @@ public class MojangService extends AppleRequestPriorityService<MojangService.Moj
 
     }
 
-    private static class ResponseUUID {
+    public static class ResponseUUID {
         public String name;
         public String id;
     }

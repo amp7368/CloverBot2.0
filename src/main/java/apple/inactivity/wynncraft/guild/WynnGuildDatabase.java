@@ -93,7 +93,7 @@ public class WynnGuildDatabase {
             int i = 0, j = 0;
             for (String guild : guilds) {
                 WynnGuildHeader guildHeader = get().guilds.get(guild);
-                if (guildHeader == null) {
+                if (guildHeader == null || guildHeader.prefix == null) {
                     i++;
                     get().guilds.put(guild, new WynnGuildHeader(guild));
                     if (get().guildsRequestedToBeUpdated.add(guild)) {

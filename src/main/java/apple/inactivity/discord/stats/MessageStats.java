@@ -1,4 +1,4 @@
-package apple.inactivity.discord.messages;
+package apple.inactivity.discord.stats;
 
 import apple.discord.acd.ACD;
 import apple.discord.acd.MillisTimeUnits;

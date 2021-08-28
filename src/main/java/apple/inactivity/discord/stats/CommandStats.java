@@ -1,10 +1,9 @@
-package apple.inactivity.discord.commands;
+package apple.inactivity.discord.stats;
 
 import apple.discord.acd.ACD;
 import apple.discord.acd.command.ACDCommand;
 import apple.discord.acd.command.DiscordCommandAlias;
 import apple.discord.acd.parameters.ParameterVargs;
-import apple.inactivity.discord.messages.MessageStats;
 import apple.inactivity.mojang.MojangService;
 import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.WynncraftService;
@@ -24,7 +23,7 @@ public class CommandStats extends ACDCommand {
         WynnPlayer player = WynnGuildDatabase.getPlayer(playerName);
         MessageChannel channel = event.getChannel();
         if (player == null) {
-            MojangService.getUUID(playerName, (uuid) -> {
+            MojangService.getUUID(playerName, (uuid, name) -> {
                 WynnPlayer playerNew;
                 if ((playerNew = WynnGuildDatabase.getPlayer(Links.splitUUID(uuid))) == null) {
                     WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, Links.splitUUID(uuid), (wynnPlayer) -> {

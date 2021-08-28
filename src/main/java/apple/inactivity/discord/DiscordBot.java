@@ -6,9 +6,10 @@ import apple.inactivity.cache.SqlDiscordCache;
 import apple.inactivity.discord.activity.CommandInactivity;
 import apple.inactivity.discord.changelog.ChangelogDatabase;
 import apple.inactivity.discord.changelog.MessageChangelog;
-import apple.inactivity.discord.commands.CommandStats;
-import apple.inactivity.discord.commands.CommandSuggest;
 import apple.inactivity.discord.help.CommandHelp;
+import apple.inactivity.discord.misc.CommandSuggest;
+import apple.inactivity.discord.stats.CommandStats;
+import apple.inactivity.discord.watcher.WatchGuildCommand;
 import apple.inactivity.utils.Pretty;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -77,6 +78,7 @@ public class DiscordBot extends ListenerAdapter {
         client = builder.build();
         client.getPresence().setPresence(Activity.playing(PREFIX + "help"), false);
         ACD = new ACD(PREFIX, client);
+        ParameterConverterNames.addAllParameters(ACD);
         ACD.getCommandLogger().addLogger((event, response) -> {
             String userTag = event.getAuthor().getAsTag();
             String content = event.getMessage().getContentDisplay();
@@ -91,7 +93,10 @@ public class DiscordBot extends ListenerAdapter {
         new CommandStats(ACD);
         new CommandSuggest(ACD);
         new CommandHelp(ACD);
+        new WatchGuildCommand(ACD);
     }
+
+
 
     @Override
     public void onReady(@Nonnull ReadyEvent event) {

@@ -1,4 +1,4 @@
-package apple.inactivity.discord.commands;
+package apple.inactivity.discord.misc;
 
 import apple.discord.acd.ACD;
 import apple.discord.acd.command.ACDCommand;
