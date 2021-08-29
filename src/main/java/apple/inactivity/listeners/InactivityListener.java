@@ -1,5 +1,8 @@
 package apple.inactivity.listeners;
 
+import com.google.gson.*;
+
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -55,6 +58,25 @@ public abstract class InactivityListener {
 
         public InactivityListener getCreator() {
             return constructor.get();
+        }
+    }
+
+    public static class ListenerDeserializer implements JsonDeserializer<InactivityListener> {
+        @Override
+        public InactivityListener deserialize(JsonElement json, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+            String listenerType = json.getAsJsonObject().get("listener_type").getAsString();
+            System.out.println(listenerType);
+            return jsonDeserializationContext.deserialize(json, InactivityListenerType.from(listenerType).typeClass);
+        }
+    }
+
+    public static class ListenerSerializer implements JsonSerializer<InactivityListener> {
+        @Override
+        public JsonElement serialize(InactivityListener listener, Type type, JsonSerializationContext jsonSerializationContext) {
+            JsonElement serialized = jsonSerializationContext.serialize(listener);
+            System.out.println(listener.type);
+            serialized.getAsJsonObject().add("listener_type", new JsonPrimitive(listener.type));
+            return serialized;
         }
     }
 }

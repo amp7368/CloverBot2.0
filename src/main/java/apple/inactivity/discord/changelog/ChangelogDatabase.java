@@ -7,6 +7,7 @@ import apple.utilities.request.AppleRequestQueue;
 import apple.utilities.request.settings.RequestSettingsBuilder;
 import apple.utilities.request.settings.RequestSettingsBuilderVoid;
 import net.dv8tion.jda.api.entities.User;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -39,9 +40,14 @@ public class ChangelogDatabase implements AppleJsonDatabase<ChangelogDatabase> {
         }
     }
 
+    @NotNull
+    private static File getDbFolder() {
+        return new File(AppleJsonDatabase.getDBFolder(CloverMain.class), "changelog");
+    }
+
     @Override
     public File getDBFile() {
-        return new File(new File(getDBFolder(CloverMain.class), "changelog"), "changelog.json");
+        return new File(getDbFolder(), "changelog.json");
     }
 
     @Override

@@ -2,16 +2,28 @@ package apple.inactivity.listeners;
 
 import apple.utilities.structures.Pair;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class WatchGuild {
+    public static final Comparator<? super WatchGuild> COMPARATOR = ((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.guildName, o2.guildName));
+
     private final ArrayList<InactivityListener> listeners = new ArrayList<>();
     private int daysInactiveToTrigger = 14;
     private int daysToRepeat = 7;
     private boolean shouldRepeat = true;
     private ArrayList<Pair<String, String>> ignoreUUIDs = new ArrayList<>();
+    private final String uuid = UUID.randomUUID().toString();
+    private String guildTag;
+    private String guildName;
+
+    public WatchGuild() {
+
+    }
+
+    public WatchGuild(String guildName, String guildTag) {
+        this.guildTag = guildTag;
+        this.guildName = guildName;
+    }
 
     public int getDaysInactiveToTrigger() {
         return daysInactiveToTrigger;
@@ -59,5 +71,17 @@ public class WatchGuild {
 
     public void toggleShouldRepeat() {
         this.shouldRepeat = !this.shouldRepeat;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public String getGuildName() {
+        return this.guildName;
+    }
+
+    public String getGuildTag() {
+        return this.guildTag;
     }
 }

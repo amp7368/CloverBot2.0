@@ -26,7 +26,7 @@ public class CommandInactivity extends ACDCommand {
     }
 
     @DiscordCommandAlias(alias = {"inactivity", "activity"}, overlappingCommands = "activity", order = 2, channelType = ChannelType.TEXT)
-    public void inactivityV2(MessageReceivedEvent event, @ParameterVargs(usage = "guild") String guildName) {
+    public void inactivityV2(MessageReceivedEvent event, @ParameterVargs(usage = "[guild]", nonEmpty = true) String guildName) {
         Guild discordGuild = event.getGuild();
         User author = event.getAuthor();
         Member selfMember = discordGuild.getMember(acd.getSelfUser());
@@ -49,7 +49,7 @@ public class CommandInactivity extends ACDCommand {
     }
 
     @DiscordCommandAlias(alias = {"inactivity v1", "activity v1"}, overlappingCommands = "activity", order = 1, channelType = ChannelType.TEXT)
-    public void inactivityV1(MessageReceivedEvent event, @ParameterVargs(usage = "guild") String guildName) {
+    public void inactivityV1(MessageReceivedEvent event, @ParameterVargs(usage = "[guild]", nonEmpty = true) String guildName) {
         Guild discordGuild = event.getGuild();
         User author = event.getAuthor();
         Member selfMember = discordGuild.getMember(acd.getSelfUser());

@@ -19,7 +19,7 @@ public class CommandStats extends ACDCommand {
     }
 
     @DiscordCommandAlias(alias = "stats")
-    public void stats(MessageReceivedEvent event, @ParameterVargs(usage = "[player]") String playerName) {
+    public void stats(MessageReceivedEvent event, @ParameterVargs(usage = "[player]", nonEmpty = true) String playerName) {
         WynnPlayer player = WynnGuildDatabase.getPlayer(playerName);
         MessageChannel channel = event.getChannel();
         if (player == null) {

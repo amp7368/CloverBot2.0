@@ -3,6 +3,7 @@ package apple.inactivity;
 import apple.inactivity.cache.VerifyDiscordCache;
 import apple.inactivity.discord.DiscordBot;
 import apple.inactivity.discord.changelog.ChangelogDatabase;
+import apple.inactivity.manage.Servers;
 import apple.inactivity.wynncraft.GuildListThread;
 import apple.inactivity.wynncraft.guild.WynnGuildDatabase;
 
@@ -14,6 +15,7 @@ public class CloverMain {
         VerifyDiscordCache.connect();
         WynnGuildDatabase.loadDatabase();
         ChangelogDatabase.loadNow();
+        Servers.loadNow();
         DiscordBot bot = new DiscordBot();
         new Thread(new GuildListThread()).start();
         System.out.println("CloverBot started");

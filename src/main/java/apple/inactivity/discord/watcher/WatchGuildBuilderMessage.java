@@ -13,10 +13,13 @@ import apple.discord.acd.text.ACDChannelListenerFromUser;
 import apple.discord.acd.text.DiscordChannelListener;
 import apple.inactivity.discord.DiscordBot;
 import apple.inactivity.discord.ParameterConverterNames;
+import apple.inactivity.discord.clover.ManageServerCommand;
 import apple.inactivity.listeners.InactivityListener;
 import apple.inactivity.listeners.InactivityListenerPing;
 import apple.inactivity.listeners.WatchGuild;
-import apple.inactivity.listeners.WatchGuildManager;
+import apple.inactivity.manage.ServerManager;
+import apple.inactivity.manage.Servers;
+import apple.inactivity.manage.WatchGuildManager;
 import apple.inactivity.mojang.MojangService;
 import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuildHeader;
@@ -50,26 +53,44 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
     private final TextChannel channel;
     private final User author;
     private final WynnGuildHeader guild;
-    private final WatchGuild trigger = new WatchGuild();
+    private final long serverId;
     private String extraMessage = null;
+    private WatchGuild trigger;
 
     public WatchGuildBuilderMessage(ACD acd, TextChannel channel, User author, WynnGuildHeader guild) {
         super(acd, channel);
         this.channel = channel;
         this.author = author;
         this.guild = guild;
+        this.serverId = channel.getGuild().getIdLong();
         addPage(this::confirmGuild);
         addPage(this::adjustInactivityWatch);
         addPage(this::addIgnoredMembers);
         addPage(this::saved);
+        this.trigger = new WatchGuild(guild.name, guild.prefix);
+    }
+
+    public WatchGuildBuilderMessage(ACD acd, Message message, User author, WynnGuildHeader guild, WatchGuild watch) {
+        super(acd, message);
+        this.channel = message.getTextChannel();
+        this.author = author;
+        this.guild = guild;
+        this.serverId = channel.getGuild().getIdLong();
+        addPage(this::confirmGuild);
+        addPage(this::adjustInactivityWatch);
+        addPage(this::addIgnoredMembers);
+        addPage(this::saved);
+        this.trigger = watch;
     }
 
     private Message saved() {
-        WatchGuildManager.addWatch(trigger);
+        ServerManager manager = Servers.getOrMake(serverId);
+        WatchGuildManager watchGuildManager = manager.getWatchGuildManager();
+        watchGuildManager.addWatch(trigger);
         MessageBuilder messageBuilder = new MessageBuilder();
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("Saved the watch");
-        embed.setAuthor(String.format("Use %s%s to see the watches for this Discord Server", DiscordBot.PREFIX, WatchGuildCommand.LIST_COMMAND));
+        embed.setAuthor(String.format("Use %s%s to see the watches for this Discord Server", DiscordBot.PREFIX, ManageServerCommand.CLOVER_MANAGE_SERVER_COMMAND));
         messageBuilder.setEmbeds(embed.build());
         return messageBuilder.build();
     }
@@ -155,7 +176,7 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
         // add menu to select a listener to add
         options = new ArrayList<>();
         for (int listenerIndex = 0, size = trigger.getListeners().size(); listenerIndex < size; listenerIndex++) {
-            options.add(SelectOption.of(String.valueOf(listenerIndex+1), String.valueOf(listenerIndex)));
+            options.add(SelectOption.of(String.valueOf(listenerIndex + 1), String.valueOf(listenerIndex)));
         }
         SelectionMenuImpl editListeners = new SelectionMenuImpl("edit_listener_menu", "Edit listeners", 1, 1, false, options);
         List<ActionRow> actionRows = new ArrayList<>(List.of(ActionRow.of(

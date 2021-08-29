@@ -1,11 +1,16 @@
 package apple.inactivity.discord;
 
 import apple.discord.acd.ACD;
+import apple.discord.acd.command.ACDCommandResponse;
+import apple.discord.acd.command.CommandLogger;
+import apple.discord.acd.command.CommandLoggerLevel;
+import apple.discord.acd.command.DefaultCommandLoggerLevel;
 import apple.inactivity.CloverMain;
 import apple.inactivity.cache.SqlDiscordCache;
 import apple.inactivity.discord.activity.CommandInactivity;
 import apple.inactivity.discord.changelog.ChangelogDatabase;
 import apple.inactivity.discord.changelog.MessageChangelog;
+import apple.inactivity.discord.clover.ManageServerCommand;
 import apple.inactivity.discord.help.CommandHelp;
 import apple.inactivity.discord.misc.CommandSuggest;
 import apple.inactivity.discord.stats.CommandStats;
@@ -15,14 +20,11 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.ChannelType;
-import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.user.UserTypingEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,7 +40,7 @@ public class DiscordBot extends ListenerAdapter {
     public static final String PREFIX = "t!";
     public static final long APPLEPTR16 = 253646208084475904L;
     public static final long LOGGING_CHANNEL = 769737908293992509L;
-    private static ACD ACD;
+    public static ACD ACD;
 
     public static String discordToken; // my bot
     public static JDA client;
@@ -78,32 +80,15 @@ public class DiscordBot extends ListenerAdapter {
         client = builder.build();
         client.getPresence().setPresence(Activity.playing(PREFIX + "help"), false);
         ACD = new ACD(PREFIX, client);
+        CloverPermissions.addAllPermissions(ACD);
         ParameterConverterNames.addAllParameters(ACD);
-        ACD.getCommandLogger().addLogger((event, response) -> {
-            String userTag = event.getAuthor().getAsTag();
-            String content = event.getMessage().getContentDisplay();
-            String guildName = event.getGuild().getName();
-            if (!ChangelogDatabase.hasHeardChangelog(event.getAuthor().getIdLong())) {
-                new MessageChangelog(ACD, event.getChannel()).makeFirstMessage();
-                ChangelogDatabase.addMember(event.getAuthor());
-            }
-            SendLogs.log(Pretty.uppercaseFirst(response.getCommandAlias()), String.format("*%s* has requested '%s' in the %s server", userTag, content, guildName));
-        });
+        ACD.getCommandLogger().addLogger(new CloverLogger());
         new CommandInactivity(ACD);
         new CommandStats(ACD);
         new CommandSuggest(ACD);
         new CommandHelp(ACD);
         new WatchGuildCommand(ACD);
-    }
-
-
-
-    @Override
-    public void onReady(@Nonnull ReadyEvent event) {
-    }
-
-    @Override
-    public void onUserTyping(@NotNull UserTypingEvent event) {
+        new ManageServerCommand(ACD);
     }
 
     @Override
@@ -115,7 +100,6 @@ public class DiscordBot extends ListenerAdapter {
             return;
         }
         // the author is not a bot
-        legacy(event);
 
         try {
             SqlDiscordCache.cache(event);
@@ -124,10 +108,22 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
-    private void legacy(MessageReceivedEvent event) {
-        String messageContent = event.getMessage().getContentStripped().toLowerCase();
-        if (messageContent.startsWith("$inactivity")) {
-            event.getChannel().sendMessage("This is no longer a supported command. Try doing c!inactivity or c!activity").queue();
+    private static class CloverLogger implements CommandLogger {
+        @Override
+        public void log(@NotNull MessageReceivedEvent event, ACDCommandResponse response) {
+            String userTag = event.getAuthor().getAsTag();
+            String content = event.getMessage().getContentDisplay();
+            String guildName = event.getGuild().getName();
+            if (!ChangelogDatabase.hasHeardChangelog(event.getAuthor().getIdLong())) {
+                new MessageChangelog(ACD, event.getChannel()).makeFirstMessage();
+                ChangelogDatabase.addMember(event.getAuthor());
+            }
+            SendLogs.log(Pretty.uppercaseFirst(response.getCommandAlias()), String.format("*%s* has requested '%s' in the %s server", userTag, content, guildName));
+        }
+
+        @Override
+        public boolean shouldLog(CommandLoggerLevel level) {
+            return level.getLevel() != DefaultCommandLoggerLevel.IGNORE.getLevel();
         }
     }
 }
