@@ -46,7 +46,7 @@ public class MessageStats extends ACDGuiPageable {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setAuthor(String.format("General Page (%d)", page + 1));
         colorAndTitle(embed);
-        embed.addField("Activity", String.format("**%s days** since last active", this.player.inactivity()), false);
+        embed.addField("Activity", String.format("**%s days** since last active", this.player.getInactiveDays()), false);
         embed.addField("Playtime", String.format("%d hours", this.player.hoursPlayed()), false);
         return new MessageBuilder().setEmbeds(embed.build()).build();
     }

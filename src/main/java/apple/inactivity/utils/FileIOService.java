@@ -1,4 +1,4 @@
-package apple.inactivity.wynncraft;
+package apple.inactivity.utils;
 
 import apple.utilities.request.AppleRequest;
 import apple.utilities.request.AppleRequestService;
@@ -17,14 +17,10 @@ public class FileIOService extends AppleRequestService {
     @Override
     public <T> RequestHandler<T> queue(AppleRequest<T> request, Consumer<T> runAfter, RequestSettingsBuilder<T> builder) {
         builder.addRequestLogger(new RequestLogger<T>() {
-
-
             @Override
             public void exceptionHandle(Exception e) {
-                System.out.println("file exception");
+                e.printStackTrace();
             }
-
-
         });
         return super.queue(request, runAfter, builder);
     }

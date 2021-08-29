@@ -67,7 +67,7 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
         addPage(this::adjustInactivityWatch);
         addPage(this::addIgnoredMembers);
         addPage(this::saved);
-        this.trigger = new WatchGuild(guild.name, guild.prefix);
+        this.trigger = new WatchGuild(guild.name, guild.prefix,serverId);
     }
 
     public WatchGuildBuilderMessage(ACD acd, Message message, User author, WynnGuildHeader guild, WatchGuild watch) {

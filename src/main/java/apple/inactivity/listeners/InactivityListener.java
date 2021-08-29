@@ -16,7 +16,7 @@ public abstract class InactivityListener {
 
     public abstract String prettyString();
 
-    public abstract void trigger(int daysInactiveToTrigger, String player);
+    public abstract void trigger(WatchedPlayer mention, int daysInactiveToTrigger, String player);
 
     public enum InactivityListenerType {
         PING("ping", "Ping/Log", InactivityListenerPing.class, InactivityListenerPing::new);
@@ -65,7 +65,6 @@ public abstract class InactivityListener {
         @Override
         public InactivityListener deserialize(JsonElement json, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
             String listenerType = json.getAsJsonObject().get("listener_type").getAsString();
-            System.out.println(listenerType);
             return jsonDeserializationContext.deserialize(json, InactivityListenerType.from(listenerType).typeClass);
         }
     }
@@ -74,7 +73,6 @@ public abstract class InactivityListener {
         @Override
         public JsonElement serialize(InactivityListener listener, Type type, JsonSerializationContext jsonSerializationContext) {
             JsonElement serialized = jsonSerializationContext.serialize(listener);
-            System.out.println(listener.type);
             serialized.getAsJsonObject().add("listener_type", new JsonPrimitive(listener.type));
             return serialized;
         }

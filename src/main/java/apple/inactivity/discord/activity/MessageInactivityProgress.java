@@ -4,9 +4,9 @@ import apple.discord.acd.ACD;
 import apple.discord.acd.MillisTimeUnits;
 import apple.discord.acd.reaction.gui.ACDGui;
 import apple.inactivity.utils.Pretty;
+import apple.inactivity.wynncraft.WynnDatabase;
 import apple.inactivity.wynncraft.WynncraftService;
 import apple.inactivity.wynncraft.guild.WynnGuild;
-import apple.inactivity.wynncraft.guild.WynnGuildDatabase;
 import apple.inactivity.wynncraft.guild.WynnGuildHeader;
 import apple.inactivity.wynncraft.guild.WynnGuildMember;
 import apple.inactivity.wynncraft.player.WynnPlayer;
@@ -29,6 +29,11 @@ public abstract class MessageInactivityProgress extends ACDGui {
         super(acd, channel);
         this.guildHeader = guildHeader;
         this.discordMember = discordMember;
+    }
+
+    @Override
+    public void makeFirstMessage() {
+        super.makeFirstMessage();
         WynncraftService.queue(WynncraftService.WynnRequestPriority.PRIMARY, guildHeader.name, wynnGuild -> {
             synchronized (this) {
                 setGuild(wynnGuild);
@@ -36,7 +41,7 @@ public abstract class MessageInactivityProgress extends ACDGui {
             }
             for (WynnGuildMember guildMember : List.of(wynnGuild.members)) {
                 if (guildMember != null) {
-                    @Nullable WynnPlayer player = WynnGuildDatabase.getPlayer(guildMember.uuid);
+                    @Nullable WynnPlayer player = WynnDatabase.getPlayer(guildMember.uuid);
                     if (player == null)
                         WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, guildMember.uuid, member -> addPlayer(guildMember, member));
                     else
@@ -59,7 +64,7 @@ public abstract class MessageInactivityProgress extends ACDGui {
                 editMessageOnTimer();
             }
         }
-        WynnGuildDatabase.addMember(player);
+        WynnDatabase.addMember(player);
     }
 
     public abstract void onFinishedProgress();

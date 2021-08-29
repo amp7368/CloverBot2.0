@@ -2,6 +2,7 @@ package apple.inactivity.listeners;
 
 import apple.inactivity.discord.DiscordBot;
 import net.dv8tion.jda.api.entities.TextChannel;
+import org.jetbrains.annotations.Nullable;
 
 public class InactivityListenerPing extends InactivityListener {
     public String message = "%s has been inactive for ## days";
@@ -27,9 +28,9 @@ public class InactivityListenerPing extends InactivityListener {
 
 
     @Override
-    public void trigger(int daysInactiveToTrigger, String player) {
+    public void trigger(@Nullable WatchedPlayer watchedPlayer, int daysInactiveToTrigger, String player) {
         verifyChannel();
-        channel.sendMessage(message.replaceAll("%s", player).replaceAll("##", String.valueOf(daysInactiveToTrigger))).queue();
+        channel.sendMessage(message.replace("%s", player).replace("##", String.valueOf(daysInactiveToTrigger))).queue();
     }
 
     public void setChannel(TextChannel channel) {

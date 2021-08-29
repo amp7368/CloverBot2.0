@@ -3,10 +3,12 @@ package apple.inactivity.wynncraft.player;
 import apple.discord.acd.MillisTimeUnits;
 import apple.inactivity.wynncraft.guild.WynnGuildMember;
 
+import java.util.UUID;
+
 public class WynnPlayer {
     private static final long TIME_TO_SAVE = MillisTimeUnits.HOUR;
     public String username;
-    public String uuid;
+    public UUID uuid;
     public String rank;
     public WynnPlayerMeta meta;
     public WynnPlayerClass[] classes;
@@ -24,8 +26,16 @@ public class WynnPlayer {
         this.guildMember = guildMember;
     }
 
-    public int inactivity() {
-        return (int) ((timeRetrieved - meta.lastJoin.getTime()) / MillisTimeUnits.DAY);
+    public int getInactiveDays() {
+        return (int) (getInactivityMillis() / MillisTimeUnits.DAY);
+    }
+
+    public long getInactivityMillis() {
+        return timeRetrieved - meta.lastJoin.getTime();
+    }
+
+    public long getTimeRetrieved() {
+        return timeRetrieved;
     }
 
     public int hoursPlayed() {
@@ -52,9 +62,13 @@ public class WynnPlayer {
                 level = level1;
             }
         }
-        if(level == null){
-            level = new ProfessionLevel(0,0);
+        if (level == null) {
+            level = new ProfessionLevel(0, 0);
         }
         return level;
+    }
+
+    public WynnInactivePlayer toWynnInactivePlayer() {
+        return new WynnInactivePlayer(this);
     }
 }

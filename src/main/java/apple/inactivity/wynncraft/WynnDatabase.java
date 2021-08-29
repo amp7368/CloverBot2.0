@@ -1,9 +1,11 @@
-package apple.inactivity.wynncraft.guild;
+package apple.inactivity.wynncraft;
 
 import apple.inactivity.CloverMain;
-import apple.inactivity.wynncraft.FileIOService;
-import apple.inactivity.wynncraft.WynncraftService;
+import apple.inactivity.utils.FileIOService;
+import apple.inactivity.wynncraft.guild.WynnGuild;
+import apple.inactivity.wynncraft.guild.WynnGuildHeader;
 import apple.inactivity.wynncraft.player.WynnPlayer;
+import apple.utilities.database.AppleJsonDatabase;
 import apple.utilities.request.AppleJsonFromFile;
 import apple.utilities.request.AppleJsonToFile;
 import apple.utilities.request.AppleRequestService;
@@ -13,13 +15,12 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.*;
 
-public class WynnGuildDatabase {
+public class WynnDatabase {
     private static final File GUILD_FOLDER;
-    private final static WynnGuildDatabase instance = new WynnGuildDatabase();
+    private final static WynnDatabase instance = new WynnDatabase();
 
     static {
-        List<String> list = Arrays.asList(CloverMain.class.getProtectionDomain().getCodeSource().getLocation().getPath().split("/"));
-        GUILD_FOLDER = new File(String.join("/", list.subList(0, list.size() - 1)) + "/wynncraft/guild");
+        GUILD_FOLDER = new File(new File(AppleJsonDatabase.getDBFolder(CloverMain.class), "wynncraft"), "guild");
         GUILD_FOLDER.mkdirs();
     }
 
@@ -27,7 +28,7 @@ public class WynnGuildDatabase {
     private final Map<String, WynnPlayer> members = new HashMap<>();
     private final Map<String, WynnGuildHeader> guilds = new HashMap<>(20000);
 
-    private static WynnGuildDatabase get() {
+    private static WynnDatabase get() {
         return instance;
     }
 
@@ -128,8 +129,9 @@ public class WynnGuildDatabase {
 
     public static void addMember(WynnPlayer member) {
         synchronized (instance) {
-            get().members.put(member.uuid, member);
+            get().members.put(member.uuid.toString(), member);
         }
+        WynnPlayerInactivity.get().addPlayer(member.toWynnInactivePlayer());
     }
 
     @Nullable

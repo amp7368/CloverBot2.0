@@ -1,6 +1,6 @@
 package apple.inactivity.discord;
 
-import apple.inactivity.wynncraft.guild.WynnGuildDatabase;
+import apple.inactivity.wynncraft.WynnDatabase;
 import apple.inactivity.wynncraft.guild.WynnGuildHeader;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
@@ -21,7 +21,7 @@ public class ArgumentUtils {
             SendLogs.log("Inactivity", String.format("*%s* has requested '%s', but I'm not a member.", author.getAsTag(), event.getMessage().getContentDisplay()));
             return null;
         }
-        List<WynnGuildHeader> guildMatches = WynnGuildDatabase.getFromGuildName(guildName);
+        List<WynnGuildHeader> guildMatches = WynnDatabase.getFromGuildName(guildName);
         WynnGuildHeader wynnGuild;
         if (guildMatches.size() == 1) {
             wynnGuild = guildMatches.get(0);

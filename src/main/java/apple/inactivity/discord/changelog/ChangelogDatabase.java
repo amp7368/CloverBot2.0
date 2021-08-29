@@ -1,7 +1,7 @@
 package apple.inactivity.discord.changelog;
 
 import apple.inactivity.CloverMain;
-import apple.inactivity.wynncraft.FileIOService;
+import apple.inactivity.utils.FileIOService;
 import apple.utilities.database.AppleJsonDatabase;
 import apple.utilities.request.AppleRequestQueue;
 import apple.utilities.request.settings.RequestSettingsBuilder;

@@ -3,7 +3,6 @@ package apple.inactivity.wynncraft;
 import apple.discord.acd.MillisTimeUnits;
 import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuild;
-import apple.inactivity.wynncraft.guild.WynnGuildDatabase;
 import apple.inactivity.wynncraft.player.WynnPlayer;
 import apple.inactivity.wynncraft.player.WynnPlayerResponse;
 import apple.utilities.request.AppleJsonFromURL;
@@ -37,17 +36,20 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
     }
 
     public static void queuePriority(WynnRequestPriority priority, String guildMember, Consumer<@Nullable WynnPlayer> runAfter) {
-        RequestPrioritySettingsBuilder<WynnPlayerResponse, WynnRequestPriority> settings = get()
-                .<WynnPlayerResponse>getDefaultPrioritySettings()
+        RequestPrioritySettingsBuilder<WynnPlayer, WynnRequestPriority> settings = get()
+                .<WynnPlayer>getDefaultPrioritySettings()
                 .withPriority(priority)
                 .withPriorityRequestLogger(getLogger(String.format(Links.PLAYER_STATS, guildMember)));
-        get().queuePriority(new AppleJsonFromURL<>(String.format(Links.PLAYER_STATS, guildMember),
-                WynnPlayerResponse.class).withGson(GSON), (WynnPlayerResponse response) -> {
+        get().queuePriority(() -> {
+            @Nullable WynnPlayer player = WynnDatabase.getPlayer(guildMember);
+            if (player != null) return player;
+            WynnPlayerResponse response = new AppleJsonFromURL<>(String.format(Links.PLAYER_STATS, guildMember),
+                    WynnPlayerResponse.class).withGson(GSON).get();
             if (response == null || response.data.length == 0)
                 throw new AppleRequest.AppleRuntimeRequestException("Data does not exist");
-            WynnGuildDatabase.addMember(response.data[0]);
-            runAfter.accept(response.data[0]);
-        }, settings);
+            WynnDatabase.addMember(response.data[0]);
+            return response.data[0];
+        }, runAfter, settings);
     }
 
     @NotNull
@@ -55,7 +57,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
         return new RequestLogger<>() {
             @Override
             public void startRequest() {
-                System.out.println("Start request '" + guild+"'");
+                System.out.println("Start request '" + guild + "'");
             }
 
             @Override
@@ -88,6 +90,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
     public enum WynnRequestPriority implements AppleRequestPriority {
         NOW(600, 750, 10),
         PRIMARY(600, 750, 10),
+        LAZY(500, 1000, 10),
         BACKGROUND(400, 2000, 20);
 
         private final int requestsPerTimeUnit;

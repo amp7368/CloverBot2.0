@@ -13,7 +13,7 @@ public class InactivityWynnPlayer implements GuiEntryStringable {
 
     @Override
     public String asEntryString(int indexInPage, int indexInList) {
-        long days = player.inactivity();
+        long days = player.getInactiveDays();
         String daysString;
         if (days < 0)
             daysString = "Error";
