@@ -1,4 +1,4 @@
-package apple.inactivity.listeners;
+package apple.inactivity.manage.listeners;
 
 import apple.utilities.event.AppleHandler;
 

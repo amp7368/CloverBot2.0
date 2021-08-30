@@ -1,8 +1,8 @@
 package apple.inactivity;
 
 import apple.discord.acd.MillisTimeUnits;
-import apple.inactivity.listeners.AggregatedWatchesByGuild;
-import apple.inactivity.listeners.WatchGuild;
+import apple.inactivity.manage.listeners.AggregatedWatchesByGuild;
+import apple.inactivity.manage.listeners.WatchGuild;
 
 import java.util.HashMap;
 import java.util.UUID;

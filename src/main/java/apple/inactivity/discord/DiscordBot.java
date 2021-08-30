@@ -12,6 +12,7 @@ import apple.inactivity.discord.changelog.ChangelogDatabase;
 import apple.inactivity.discord.changelog.MessageChangelog;
 import apple.inactivity.discord.clover.ManageServerCommand;
 import apple.inactivity.discord.help.CommandHelp;
+import apple.inactivity.discord.linked.RegisterMCCommand;
 import apple.inactivity.discord.misc.CommandSuggest;
 import apple.inactivity.discord.stats.CommandStats;
 import apple.inactivity.discord.watcher.WatchGuildCommand;
@@ -23,6 +24,7 @@ import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.jetbrains.annotations.NotNull;
 
 import javax.security.auth.login.LoginException;
@@ -72,10 +74,10 @@ public class DiscordBot extends ListenerAdapter {
 
     public DiscordBot() throws LoginException {
         Collection<GatewayIntent> intents = new ArrayList<>(Arrays.asList(GatewayIntent.values()));
-        intents.remove(GatewayIntent.GUILD_MEMBERS);
         intents.remove(GatewayIntent.GUILD_PRESENCES);
         JDABuilder builder = JDABuilder.create(intents);
         builder.addEventListeners(this);
+        builder.setMemberCachePolicy(MemberCachePolicy.NONE);
         builder.setToken(discordToken);
         client = builder.build();
         client.getPresence().setPresence(Activity.playing(PREFIX + "help"), false);
@@ -89,6 +91,7 @@ public class DiscordBot extends ListenerAdapter {
         new CommandHelp(ACD);
         new WatchGuildCommand(ACD);
         new ManageServerCommand(ACD);
+        new RegisterMCCommand(ACD);
     }
 
     @Override

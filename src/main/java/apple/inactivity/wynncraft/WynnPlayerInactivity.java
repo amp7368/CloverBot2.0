@@ -5,11 +5,11 @@ import apple.inactivity.utils.FileIOLazyService;
 import apple.inactivity.utils.FileIOService;
 import apple.inactivity.wynncraft.player.WynnInactivePlayer;
 import apple.utilities.database.keyed.AppleJsonDatabaseManagerKey;
-import apple.utilities.file.FileFormatting;
 import apple.utilities.request.AppleRequestQueue;
 import apple.utilities.request.keyed.AppleRequestKeyQueue;
 import apple.utilities.request.settings.RequestSettingsBuilder;
 import apple.utilities.request.settings.RequestSettingsBuilderVoid;
+import apple.utilities.util.FileFormatting;
 
 import java.io.File;
 import java.util.HashMap;

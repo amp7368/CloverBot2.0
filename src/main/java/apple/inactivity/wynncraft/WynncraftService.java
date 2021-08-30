@@ -5,16 +5,14 @@ import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuild;
 import apple.inactivity.wynncraft.player.WynnPlayer;
 import apple.inactivity.wynncraft.player.WynnPlayerResponse;
-import apple.utilities.request.AppleJsonFromURL;
-import apple.utilities.request.AppleRequest;
-import apple.utilities.request.AppleRequestPriorityService;
-import apple.utilities.request.RequestLogger;
+import apple.utilities.request.*;
 import apple.utilities.request.settings.RequestPrioritySettingsBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 
 public class WynncraftService extends AppleRequestPriorityService<WynncraftService.WynnRequestPriority> {
@@ -30,6 +28,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
         RequestPrioritySettingsBuilder<WynnGuild, WynnRequestPriority> settings = get()
                 .<WynnGuild>getDefaultPrioritySettings()
                 .withPriority(priority)
+                .withPriorityExceptionHandler(new SimpleExceptionHandler(new Class[]{IOException.class}, () -> runAfter.accept(null)))
                 .withPriorityRequestLogger(logger);
         get().queuePriority(new AppleJsonFromURL<>(String.format(Links.GUILD_STATS, guild),
                 WynnGuild.class).withGson(GSON), runAfter, settings);
@@ -39,6 +38,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
         RequestPrioritySettingsBuilder<WynnPlayer, WynnRequestPriority> settings = get()
                 .<WynnPlayer>getDefaultPrioritySettings()
                 .withPriority(priority)
+                .withPriorityExceptionHandler(new SimpleExceptionHandler(new Class[]{IOException.class}, () -> runAfter.accept(null)))
                 .withPriorityRequestLogger(getLogger(String.format(Links.PLAYER_STATS, guildMember)));
         get().queuePriority(() -> {
             @Nullable WynnPlayer player = WynnDatabase.getPlayer(guildMember);
@@ -88,6 +88,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
     }
 
     public enum WynnRequestPriority implements AppleRequestPriority {
+        IMMEDIATE(600, 750, 10),
         NOW(600, 750, 10),
         PRIMARY(600, 750, 10),
         LAZY(500, 1000, 10),

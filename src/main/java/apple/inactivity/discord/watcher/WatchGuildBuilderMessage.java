@@ -14,12 +14,12 @@ import apple.discord.acd.text.DiscordChannelListener;
 import apple.inactivity.discord.DiscordBot;
 import apple.inactivity.discord.ParameterConverterNames;
 import apple.inactivity.discord.clover.ManageServerCommand;
-import apple.inactivity.listeners.InactivityListener;
-import apple.inactivity.listeners.InactivityListenerPing;
-import apple.inactivity.listeners.WatchGuild;
 import apple.inactivity.manage.ServerManager;
 import apple.inactivity.manage.Servers;
 import apple.inactivity.manage.WatchGuildManager;
+import apple.inactivity.manage.listeners.InactivityListener;
+import apple.inactivity.manage.listeners.InactivityListenerPing;
+import apple.inactivity.manage.listeners.WatchGuild;
 import apple.inactivity.mojang.MojangService;
 import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuildHeader;
@@ -67,7 +67,7 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
         addPage(this::adjustInactivityWatch);
         addPage(this::addIgnoredMembers);
         addPage(this::saved);
-        this.trigger = new WatchGuild(guild.name, guild.prefix,serverId);
+        this.trigger = new WatchGuild(guild.name, guild.prefix, serverId);
     }
 
     public WatchGuildBuilderMessage(ACD acd, Message message, User author, WynnGuildHeader guild, WatchGuild watch) {
@@ -364,7 +364,12 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
 
         @GuiButton(id = "set_message")
         public void setMessage(ButtonClickEvent event) {
-            extraMessage = "Please type the message that will be used to ping people (%s will be replaced with the inactive member's name\nUse ## to specify where days inactive will be listed";
+            extraMessage = """
+                    Please type the message that will be used to ping people
+                    Use %s to specify where the inactive member's name will be listed
+                    Use ## to specify where days inactive will be listed
+                    Use @@ to specify where the discord mention of the inactive player will be listed
+                    Use normal pings to ping certain people every time""";
             editAsReply(event);
             new MessageListener(acd, event.getChannel(), (e, msg) -> {
                 e.getMessage().delete().queue((s) -> {

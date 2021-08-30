@@ -2,6 +2,7 @@ package apple.inactivity.wynncraft.player;
 
 import apple.discord.acd.MillisTimeUnits;
 import apple.inactivity.wynncraft.guild.WynnGuildMember;
+import apple.utilities.util.FuzzyStringMatcher;
 
 import java.util.UUID;
 
@@ -14,6 +15,7 @@ public class WynnPlayer {
     public WynnPlayerClass[] classes;
     public WynnPlayerGlobalData global;
     public WynnPlayerRanking ranking;
+    private transient FuzzyStringMatcher usernamePattern = null;
     public transient long timeRetrieved = System.currentTimeMillis();
     public transient WynnGuildMember guildMember;
     private transient ProfessionLevel[] maxProfs = null;
@@ -70,5 +72,23 @@ public class WynnPlayer {
 
     public WynnInactivePlayer toWynnInactivePlayer() {
         return new WynnInactivePlayer(this);
+    }
+
+    public boolean nameEquals(String playerName) {
+        return this.username.equalsIgnoreCase(playerName);
+    }
+
+    public boolean nameContains(String playerName) {
+        if (usernamePattern == null) {
+            usernamePattern = new FuzzyStringMatcher(username, FuzzyStringMatcher.Flag.CONTAINS, FuzzyStringMatcher.Flag.CASE_INSENSITIVE);
+        }
+        return usernamePattern.operationsToMatch(playerName, 0) >= 0;
+    }
+
+    public boolean nameOneCharOff(String playerName) {
+        if (usernamePattern == null) {
+            usernamePattern = new FuzzyStringMatcher(username, FuzzyStringMatcher.Flag.CONTAINS, FuzzyStringMatcher.Flag.CASE_INSENSITIVE);
+        }
+        return usernamePattern.operationsToMatch(playerName, 1) >= 0;
     }
 }

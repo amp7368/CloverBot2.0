@@ -1,7 +1,7 @@
 package apple.inactivity.manage;
 
 import apple.inactivity.WatchGuildDaemon;
-import apple.inactivity.listeners.WatchGuild;
+import apple.inactivity.manage.listeners.WatchGuild;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +11,7 @@ import java.util.UUID;
 public class WatchGuildManager {
     private final HashMap<UUID, WatchGuild> watches = new HashMap<>();
     private long discordId;
+    private transient ServerManager serverManager = null;
 
     // for gson
     public WatchGuildManager() {
@@ -23,7 +24,12 @@ public class WatchGuildManager {
 
     public void addWatch(WatchGuild watchGuild) {
         watches.put(watchGuild.getUUID(), watchGuild);
-        Servers.getOrMake(discordId).save();
+        verifyServerManager();
+        serverManager.save();
+    }
+
+    private void verifyServerManager() {
+        serverManager = Servers.getOrMake(discordId);
     }
 
     public List<WatchGuild> getWatches() {
@@ -31,7 +37,9 @@ public class WatchGuildManager {
     }
 
     public void register() {
-        for (WatchGuild watch : watches.values())
+        verifyServerManager();
+        for (WatchGuild watch : watches.values()) {
             WatchGuildDaemon.get().addWatch(watch);
+        }
     }
 }

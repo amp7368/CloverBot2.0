@@ -10,6 +10,7 @@ import apple.utilities.request.AppleJsonFromFile;
 import apple.utilities.request.AppleJsonToFile;
 import apple.utilities.request.AppleRequestService;
 import com.google.gson.reflect.TypeToken;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -28,7 +29,7 @@ public class WynnDatabase {
     private final Map<String, WynnPlayer> members = new HashMap<>();
     private final Map<String, WynnGuildHeader> guilds = new HashMap<>(20000);
 
-    private static WynnDatabase get() {
+    public static WynnDatabase get() {
         return instance;
     }
 
@@ -144,6 +145,26 @@ public class WynnDatabase {
                 return null;
             }
             return member;
+        }
+    }
+
+    @NotNull
+    public List<WynnPlayer> getPlayerMatches(String playerName) {
+        synchronized (instance) {
+            List<WynnPlayer> matches = new ArrayList<>();
+            List<WynnPlayer> badMatches = new ArrayList<>();
+            for (WynnPlayer player : members.values()) {
+                if (player.nameEquals(playerName)) {
+                    return List.of(player);
+                }
+                if (player.nameContains(playerName)) {
+                    matches.add(player);
+                }
+                if (player.nameOneCharOff(playerName)) {
+                    if (matches.isEmpty()) badMatches.add(player);
+                }
+            }
+            return matches.isEmpty() ? badMatches : matches;
         }
     }
 

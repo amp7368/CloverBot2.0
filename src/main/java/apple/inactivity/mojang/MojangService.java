@@ -8,6 +8,7 @@ import apple.utilities.request.AppleRequestPriorityService;
 import apple.utilities.request.AppleRequestService;
 import apple.utilities.request.settings.RequestPrioritySettingsBuilder;
 
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class MojangService extends AppleRequestPriorityService<MojangService.MojangPriority> {
@@ -22,6 +23,16 @@ public class MojangService extends AppleRequestPriorityService<MojangService.Moj
                 responseUUID -> {
                     if (responseUUID == null || responseUUID.id == null)
                         throw new AppleRequest.AppleRuntimeRequestException("no uuid for username");
+                    uuidAndNameConsumer.accept(responseUUID.id, responseUUID.name);
+                },
+                settings);
+    }
+
+    public static AppleRequestService.RequestHandler<ResponseUUID> getPlayerName(UUID uuid, BiConsumer<String, String> uuidAndNameConsumer, RequestPrioritySettingsBuilder<ResponseUUID, MojangPriority> settings) {
+        return get().queuePriority(new AppleJsonFromURL<>(String.format(Links.GET_UUID, uuid.toString().replace("-", "")), ResponseUUID.class),
+                responseUUID -> {
+                    if (responseUUID == null || responseUUID.id == null)
+                        throw new AppleRequest.AppleRuntimeRequestException("no username for uuid");
                     uuidAndNameConsumer.accept(responseUUID.id, responseUUID.name);
                 },
                 settings);

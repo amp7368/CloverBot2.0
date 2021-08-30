@@ -1,10 +1,13 @@
-package apple.inactivity.listeners;
+package apple.inactivity.manage.listeners;
 
+import apple.inactivity.manage.ServerManager;
 import com.google.gson.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 public abstract class InactivityListener {
@@ -16,7 +19,7 @@ public abstract class InactivityListener {
 
     public abstract String prettyString();
 
-    public abstract void trigger(WatchedPlayer mention, int daysInactiveToTrigger, String player);
+    public abstract void trigger(ServerManager serverManager, int daysInactiveToTrigger, String player, @Nullable UUID uuid);
 
     public enum InactivityListenerType {
         PING("ping", "Ping/Log", InactivityListenerPing.class, InactivityListenerPing::new);

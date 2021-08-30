@@ -1,5 +1,6 @@
-package apple.inactivity.listeners;
+package apple.inactivity.manage.listeners;
 
+import apple.inactivity.manage.ServerManager;
 import apple.inactivity.manage.Servers;
 import apple.inactivity.wynncraft.WynnPlayerInactivity;
 import apple.inactivity.wynncraft.WynncraftService;
@@ -25,6 +26,8 @@ public class WatchGuild {
     private String guildName;
     private long discordServerId;
 
+    private transient ServerManager serverManager = null;
+
     // for gson
     public WatchGuild() {
     }
@@ -35,11 +38,17 @@ public class WatchGuild {
         this.discordServerId = serverId;
     }
 
-    public synchronized void watchPlayers() {
-        WynncraftService.queue(WynncraftService.WynnRequestPriority.PRIMARY, guildName, this::verifyPlayerList);
+    public synchronized void verifyServerManager() {
+        if (serverManager == null) {
+            serverManager = Servers.getOrMake(discordServerId);
+        }
     }
 
-    private synchronized void verifyPlayerList(WynnGuild wynnGuild) {
+    public synchronized void watchPlayers(AggregatedWatchesByGuild callback) {
+        WynncraftService.queue(WynncraftService.WynnRequestPriority.PRIMARY, guildName, wynnGuild -> verifyPlayerList(wynnGuild, callback));
+    }
+
+    private synchronized void verifyPlayerList(WynnGuild wynnGuild, AggregatedWatchesByGuild callback) {
         // make sure players exist if they are in the guild
         // and are removed if they are not in the guild
         HashSet<UUID> memberList = new HashSet<>(Arrays.asList(wynnGuild.members)).stream().map(o -> UUID.fromString(o.uuid)).collect(Collectors.toCollection(HashSet::new));
@@ -49,26 +58,27 @@ public class WatchGuild {
         }
         // do the actual check
         for (Map.Entry<UUID, WatchedPlayer> player : players.entrySet()) {
-            WynnPlayerInactivity.get().getPlayer(player.getKey(), this::checkPlayer);
+            WynnPlayerInactivity.get().getPlayer(player.getKey(), p -> checkPlayer(p, callback));
         }
     }
 
-    private synchronized void checkPlayer(WynnInactivePlayer player) {
+    private synchronized void checkPlayer(WynnInactivePlayer player, AggregatedWatchesByGuild callback) {
         WatchedPlayer watchedPlayer = players.computeIfAbsent(player.getUUID(), (k) -> new WatchedPlayer());
         int nextCall = getNextInactiveDays(watchedPlayer.getLastCalled());
+        callback.setNextInactiveDays(player.getPossibleDaysInactive());
         if (player.getPossibleDaysInactive() > nextCall) {
-            WynnPlayerInactivity.get().updatePlayer(player.getUUID(), this::doInactivityCheck);
+            WynnPlayerInactivity.get().updatePlayer(player.getUUID(), p -> doInactivityCheck(p, callback));
         }
     }
 
-    private synchronized void doInactivityCheck(WynnInactivePlayer player) {
+    private synchronized void doInactivityCheck(WynnInactivePlayer player, AggregatedWatchesByGuild callback) {
         WatchedPlayer watchedPlayer = players.computeIfAbsent(player.getUUID(), (k) -> new WatchedPlayer());
         verifyInactive(player, watchedPlayer);
         int daysInactive = player.getDaysInactive();
-        System.out.println(daysInactive + " " + watchedPlayer.getLastCalled() + " " + getNextInactiveDays(watchedPlayer.getLastCalled()));
+        callback.setNextInactiveDays(daysInactive);
 
         if (daysInactive >= getNextInactiveDays(watchedPlayer.getLastCalled())) {
-            callTrigger(watchedPlayer, player.getName(), daysInactive);
+            callTrigger(watchedPlayer, player.getName(), player.getUUID(), daysInactive);
         }
     }
 
@@ -89,9 +99,9 @@ public class WatchGuild {
         if (lastCalled >= daysInactiveToTrigger) {
             // this is a player that has been inactive
             if ((lastCalled - daysInactiveToTrigger) % daysToRepeat == 0)
-                nextCall = daysInactiveToTrigger + ((lastCalled - daysInactiveToTrigger) / daysToRepeat+2) * (daysToRepeat );
+                nextCall = daysInactiveToTrigger + ((lastCalled - daysInactiveToTrigger) / daysToRepeat + 2) * (daysToRepeat);
             else
-                nextCall = daysInactiveToTrigger + ((lastCalled - daysInactiveToTrigger) / daysToRepeat+ 1) * (daysToRepeat );
+                nextCall = daysInactiveToTrigger + ((lastCalled - daysInactiveToTrigger) / daysToRepeat + 1) * (daysToRepeat);
         } else {
             nextCall = daysInactiveToTrigger;
         }
@@ -127,16 +137,18 @@ public class WatchGuild {
     }
 
     public synchronized void callTestTrigger(String inactivityPlayer) {
+        verifyServerManager();
         for (InactivityListener listener : listeners) {
-            listener.trigger(null, daysInactiveToTrigger, inactivityPlayer);
+            listener.trigger(serverManager, daysInactiveToTrigger, inactivityPlayer, null);
         }
     }
 
-    private synchronized void callTrigger(WatchedPlayer watchedPlayer, String inactivityPlayer, int daysInactive) {
+    private synchronized void callTrigger(WatchedPlayer watchedPlayer, String inactivityPlayer, UUID uuid, int daysInactive) {
         watchedPlayer.setLastCalled(daysInactive);
         save();
+        verifyServerManager();
         for (InactivityListener listener : listeners) {
-            listener.trigger(watchedPlayer, daysInactive, inactivityPlayer);
+            listener.trigger(serverManager, daysInactive, inactivityPlayer, uuid);
         }
     }
 

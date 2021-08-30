@@ -1,4 +1,5 @@
-package apple.inactivity.listeners;
+package apple.inactivity.manage.listeners;
+
 
 public class WatchedPlayer {
     private int lastCalled = 0;
@@ -11,8 +12,4 @@ public class WatchedPlayer {
         this.lastCalled = lastCalled;
     }
 
-    public String getAsMention() {
-        //todo
-        return null;
-    }
 }

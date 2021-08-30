@@ -4,6 +4,7 @@ import apple.utilities.database.SaveFileable;
 
 public class ServerManager implements SaveFileable {
     private WatchGuildManager watchGuild;
+    private LinkedAccountsManager linkedAccounts;
     private long discordServerId;
 
     // for gson
@@ -13,6 +14,7 @@ public class ServerManager implements SaveFileable {
     public ServerManager(long discordServerId) {
         this.discordServerId = discordServerId;
         this.watchGuild = new WatchGuildManager(discordServerId);
+        this.linkedAccounts = new LinkedAccountsManager(discordServerId);
     }
 
     public static String getFileName(long discordServerId) {
@@ -39,5 +41,9 @@ public class ServerManager implements SaveFileable {
 
     public void save() {
         Servers.get().save(this);
+    }
+
+    public LinkedAccountsManager getLinkedAccounts() {
+        return linkedAccounts;
     }
 }
