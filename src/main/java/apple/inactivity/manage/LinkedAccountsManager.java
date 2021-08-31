@@ -35,6 +35,8 @@ public class LinkedAccountsManager {
     }
 
     public void addAccount(LinkedAccount account) {
+        verifyMaps();
+        verifyServerManager();
         synchronized (linkedAccounts) {
             this.linkedAccounts.add(account);
             if (discordToAccount != null) {
@@ -58,6 +60,19 @@ public class LinkedAccountsManager {
     public List<LinkedAccount> listAccounts() {
         synchronized (linkedAccounts) {
             return new ArrayList<>(linkedAccounts);
+        }
+    }
+
+    public void clearAllConfirm() {
+        synchronized (linkedAccounts) {
+            linkedAccounts.clear();
+        }
+    }
+
+    public boolean hasAccount(UUID uuid) {
+        verifyMaps();
+        synchronized (linkedAccounts) {
+            return minecraftToAccount.containsKey(uuid);
         }
     }
 }

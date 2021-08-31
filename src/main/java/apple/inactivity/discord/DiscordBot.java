@@ -9,10 +9,11 @@ import apple.inactivity.CloverMain;
 import apple.inactivity.cache.SqlDiscordCache;
 import apple.inactivity.discord.activity.CommandInactivity;
 import apple.inactivity.discord.changelog.ChangelogDatabase;
+import apple.inactivity.discord.changelog.CommandChangelog;
 import apple.inactivity.discord.changelog.MessageChangelog;
 import apple.inactivity.discord.clover.ManageServerCommand;
 import apple.inactivity.discord.help.CommandHelp;
-import apple.inactivity.discord.linked.RegisterMCCommand;
+import apple.inactivity.discord.linked.LinkAccountCommand;
 import apple.inactivity.discord.misc.CommandSuggest;
 import apple.inactivity.discord.stats.CommandStats;
 import apple.inactivity.discord.watcher.WatchGuildCommand;
@@ -91,7 +92,8 @@ public class DiscordBot extends ListenerAdapter {
         new CommandHelp(ACD);
         new WatchGuildCommand(ACD);
         new ManageServerCommand(ACD);
-        new RegisterMCCommand(ACD);
+        new LinkAccountCommand(ACD);
+        new CommandChangelog(ACD);
     }
 
     @Override

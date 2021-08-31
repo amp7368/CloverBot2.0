@@ -22,10 +22,11 @@ public class WatchGuildManager {
     }
 
 
-    public void addWatch(WatchGuild watchGuild) {
-        watches.put(watchGuild.getUUID(), watchGuild);
+    public void addWatch(WatchGuild watch) {
+        watches.put(watch.getUUID(), watch);
         verifyServerManager();
         serverManager.save();
+        WatchGuildDaemon.get().addWatch(watch);
     }
 
     private void verifyServerManager() {
@@ -41,5 +42,12 @@ public class WatchGuildManager {
         for (WatchGuild watch : watches.values()) {
             WatchGuildDaemon.get().addWatch(watch);
         }
+    }
+
+    public void removeWatch(UUID uuid, String guildTag) {
+        watches.remove(uuid);
+        verifyServerManager();
+        serverManager.save();
+        WatchGuildDaemon.get().removeWatch(uuid, guildTag);
     }
 }

@@ -202,13 +202,17 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
     protected Collection<ActionRow> getNavigationRow() {
         if (page == 0) {
             return Collections.singleton(ActionRow.of(
-                    getForwardButton()
+                    getBackButton().asDisabled(),
+                    getForwardButton(),
+                    getTestButton().asDisabled(),
+                    getDeleteButton()
             ));
         } else if (page == pagesList.size() - 2) {
             return Collections.singleton(ActionRow.of(
                     getBackButton(),
+                    getSaveButton(),
                     getTestButton(),
-                    getSaveButton()
+                    getDeleteButton()
             ));
         } else if (page == pagesList.size() - 1) {
             return Collections.emptyList();
@@ -216,8 +220,13 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
         return Collections.singleton(ActionRow.of(
                 getBackButton(),
                 getForwardButton(),
-                getTestButton()
+                getTestButton(),
+                getDeleteButton()
         ));
+    }
+
+    private ButtonImpl getDeleteButton() {
+        return new ButtonImpl("delete", "Delete", ButtonStyle.DANGER, false, null);
     }
 
     private ButtonImpl getSaveButton() {
@@ -263,6 +272,24 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
     public void increaseRepeatDays(ButtonClickEvent interaction) {
         this.trigger.incrementDaysToRepeat(-1);
         editAsReply(interaction);
+    }
+
+    @GuiButton(id = "delete")
+    public void delete(ButtonClickEvent event) {
+        ServerManager manager = Servers.getOrMake(serverId);
+        WatchGuildManager watchGuildManager = manager.getWatchGuildManager();
+        watchGuildManager.removeWatch(trigger.getUUID(), trigger.getGuildTag());
+        event.editMessage(deletedPage()).queue();
+        remove();
+    }
+
+    private Message deletedPage() {
+        MessageBuilder messageBuilder = new MessageBuilder();
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("This watch has been deleted");
+        embed.setAuthor("Deleted");
+        messageBuilder.setEmbeds(embed.build());
+        return messageBuilder.build();
     }
 
     private Message confirmGuild() {

@@ -51,4 +51,8 @@ public class AggregatedWatchesByGuild {
     public void setNextInactiveDays(int nextInactiveDays) {
         setNextInactive(nextInactiveDays * MillisTimeUnits.DAY + System.currentTimeMillis());
     }
+
+    public synchronized void remove(UUID uuid) {
+        watches.remove(uuid);
+    }
 }

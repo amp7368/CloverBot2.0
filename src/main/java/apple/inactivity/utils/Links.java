@@ -6,6 +6,7 @@ public class Links {
     public static final String GUILD_STATS = "https://api.wynncraft.com/public_api.php?action=guildStats&command=%s";
     public static final String GET_UUID = "https://api.mojang.com/users/profiles/minecraft/%s";
     public static final String MC_AVATAR = "https://crafatar.com/avatars/";
+    public static final String GET_USERNAME = "https://api.mojang.com/user/profiles/%s/names";
 
     public static String splitUUID(String uuid) {
         StringBuilder split = new StringBuilder();

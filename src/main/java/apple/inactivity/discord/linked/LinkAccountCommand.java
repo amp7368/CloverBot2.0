@@ -9,13 +9,18 @@ import apple.discord.acd.parameters.ParameterSingle;
 import apple.discord.acd.parameters.ParameterVargs;
 import apple.discord.acd.reaction.DiscordEmoji;
 import apple.inactivity.discord.CloverPermissions;
+import apple.inactivity.manage.ServerManager;
+import apple.inactivity.manage.Servers;
 import apple.inactivity.wynncraft.WynnDatabase;
 import apple.inactivity.wynncraft.WynncraftService;
 import apple.inactivity.wynncraft.player.WynnPlayer;
 import apple.utilities.util.FuzzyStringMatcher;
 import apple.utilities.util.Pretty;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,12 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RegisterMCCommand extends ACDCommand {
-    public RegisterMCCommand(ACD acd) {
+public class LinkAccountCommand extends ACDCommand {
+    public LinkAccountCommand(ACD acd) {
         super(acd);
     }
 
-    @DiscordCommandAlias(usageFormat = "Usage: %s", alias = {"link account", "link accounts"}, overlappingCommands = "link account", order = 1, permission = CloverPermissions.ADMIN, channelType = ChannelType.TEXT)
+    @DiscordCommandAlias(usageFormat = "Usage: %s", alias = {"link account", "link accounts"}, overlappingCommands = "link account", order = 3, permission = CloverPermissions.ADMIN, channelType = ChannelType.TEXT)
     public void register(MessageReceivedEvent event, @ParameterSingle(usage = "[player_name]") String playerName, @ParameterVargs(usage = "[discord_name]", nonEmpty = true) String discordName) {
         event.getMessage().addReaction(DiscordEmoji.WORKING.getEmoji()).queue();
         event.getGuild().findMembers(member -> new FuzzyStringMatcher(member.getEffectiveName(),
@@ -85,12 +90,35 @@ public class RegisterMCCommand extends ACDCommand {
         });
     }
 
-
     @DiscordCommandAlias(alias = {"link account", "link accounts"}, overlappingCommands = "link account", permission = CloverPermissions.NOT_ADMIN, order = 100, channelType = ChannelType.TEXT)
     public ACDCommandResponse registerFail(MessageReceivedEvent event) {
         event.getChannel().sendMessage("You need to have the permission 'Manage Server' to use this command here").queue();
         ACDCommandResponse acdCommandResponse = new ACDCommandResponse();
         acdCommandResponse.setLevel(DefaultCommandLoggerLevel.IGNORE);
         return acdCommandResponse;
+    }
+
+    @DiscordCommandAlias(usageFormat = "Usage: %s", alias = {"link account missing"}, overlappingCommands = "link account", order = 1, permission = CloverPermissions.ADMIN, channelType = ChannelType.TEXT)
+    public void missingRegistered(MessageReceivedEvent event) {
+        new MissingLinkedAccountsMessage(acd, (TextChannel) event.getChannel(), Servers.getOrMake(event.getGuild().getIdLong())).makeFirstMessage();
+    }
+
+    @DiscordCommandAlias(usageFormat = "Usage: %s", alias = {"link account missing"}, overlappingCommands = "link account", order = 2, permission = CloverPermissions.NOT_ADMIN, channelType = ChannelType.TEXT)
+    public ACDCommandResponse missingRegisteredFail(MessageReceivedEvent event) {
+        event.getChannel().sendMessage("You need to have the permission 'Manage Server' to use this command here").queue();
+        ACDCommandResponse acdCommandResponse = new ACDCommandResponse();
+        acdCommandResponse.setLevel(DefaultCommandLoggerLevel.IGNORE);
+        return acdCommandResponse;
+    }
+
+    @DiscordCommandAlias(usageFormat = "Usage: %s", alias = {"clear all link account confirm"}, permission = CloverPermissions.ADMIN, channelType = ChannelType.TEXT)
+    public void clearData(MessageReceivedEvent event) {
+        ServerManager serverManager = Servers.getOrMake(event.getGuild().getIdLong());
+        serverManager.getLinkedAccounts().clearAllConfirm();
+        serverManager.save();
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("Success");
+        embed.setDescription("All linked account data has been cleared from this server");
+        event.getChannel().sendMessage(new MessageBuilder(embed.build()).build()).queue();
     }
 }

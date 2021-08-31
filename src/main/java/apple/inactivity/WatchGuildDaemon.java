@@ -50,4 +50,11 @@ public class WatchGuildDaemon {
             watch.save();
         }
     }
+
+    public void removeWatch(UUID uuid,String guildTag) {
+        synchronized (this) {
+            allWatches.remove(uuid);
+            watchesByGuild.get(guildTag).remove(uuid);
+        }
+    }
 }

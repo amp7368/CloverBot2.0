@@ -11,21 +11,24 @@ import net.dv8tion.jda.api.entities.MessageChannel;
 public class MessageHelp extends ACDGuiPageable {
     private final boolean showLegacy;
 
-    public MessageHelp(ACD acd, MessageChannel channel, boolean showLegacy) {
+    public MessageHelp(ACD acd, MessageChannel channel, boolean showLegacy, boolean isAdmin) {
         super(acd, channel);
         this.showLegacy = showLegacy;
         if (showLegacy) {
             addPage(this::legacy);
         }
         addPage(this::activity);
+        if (isAdmin) {
+            addPage(this::admin);
+        }
     }
+
 
     private Message legacy() {
         MessageBuilder message = new MessageBuilder();
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("Help Page(" + (1 + page) + ")");
         embed.addField("c!activity v1 [guild]", "Request an inactivity report in a series of messages", false);
-        embed.addField("c!activity v2 [guild]", "Request an inactivity report with pages", false);
         message.setEmbeds(embed.build());
         return message.build();
     }
@@ -34,11 +37,19 @@ public class MessageHelp extends ACDGuiPageable {
         MessageBuilder message = new MessageBuilder();
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("Help Page(" + (1 + page) + ")");
-        StringBuilder content = new StringBuilder();
-        embed.addField("c!activity [guild]", "Gives an inactivity report for a guild. The guild name is case insensitive and a full guild name is not required", false);
+        embed.addField("c!activity [guild]", "Request an inactivity report with pages", false);
         embed.addField("c!stats [player_name or uuid]", "Gives some stats about a player", false);
         embed.addField("c!suggest", "Send a message with an optional attachment to appleptr16#5054, for an idea or bug", false);
-        embed.setDescription(content);
+        message.setEmbeds(embed.build());
+        return message.build();
+    }
+
+    private Message admin() {
+        MessageBuilder message = new MessageBuilder();
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("Help Page(" + (1 + page) + ")");
+        embed.addField("c!clover", "Open a gui to manage your server settings", false);
+        embed.addField("c!watch [guild]", "Open a gui to create a watch on a guild", false);
         message.setEmbeds(embed.build());
         return message.build();
     }

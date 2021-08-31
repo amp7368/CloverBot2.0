@@ -19,11 +19,13 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.internal.interactions.ButtonImpl;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class ManageServerMessage extends ACDGuiPageable {
     private static final int ACCOUNTS_PER_PAGE = 10;
@@ -86,12 +88,15 @@ public class ManageServerMessage extends ACDGuiPageable {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setAuthor(String.format("Guild watch (%d)", index + 1));
         setEmbedTitle(embed);
+        String channelIdsString = watch.getChannelIds().stream().map(o -> String.format("<#%d>", o)).collect(Collectors.joining(", "));
         embed.addField(String.format("%s [%s]", watch.getGuildName(), watch.getGuildTag()),
                 String.format(
-                        Pretty.pluralFormat("Triggers on %c% day%s%, Repeats on %s", watch.getDaysInactiveToTrigger()),
+                        Pretty.pluralFormat("Triggers on %c% day%s%, Repeats on %s %s", watch.getDaysInactiveToTrigger()),
                         watch.isShouldRepeat() ?
                                 Pretty.pluralFormat("%c% day%s%", watch.getDaysToRepeat()) :
-                                "Never"
+                                "Never",
+
+                        channelIdsString.isBlank() ? "and does nothing" : "in " + channelIdsString
                 ), false);
         messageBuilder.setEmbeds(embed.build());
         addManualButton((e) -> {
@@ -119,14 +124,11 @@ public class ManageServerMessage extends ACDGuiPageable {
         embed.setAuthor("Table of Contents");
         setEmbedTitle(embed);
         embed.setDescription(
-                String.format(
+                """
+                        **Table of Contents**
+                        Guild watches
+                        Player name registration
                         """
-                                **Table of Contents**
-                                Guild watches (%d)
-                                Player name registration
-                                """,
-                        watches.size()
-                )
         );
         messageBuilder.setEmbeds(embed.build());
         messageBuilder.setActionRows();
@@ -139,10 +141,14 @@ public class ManageServerMessage extends ACDGuiPageable {
 
     @Override
     protected Collection<ActionRow> getNavigationRow() {
+        Button back = this.getBackButton();
+        Button forward = this.getForwardButton();
+        if (this.page == 0) back = back.asDisabled();
+        if (this.page == pagesList.size() - 1) forward = forward.asDisabled();
         return Collections.singleton(
                 ActionRow.of(
-                        getBackButton(),
-                        getForwardButton(),
+                        back,
+                        forward,
                         getTopButton()
                 )
         );
@@ -219,7 +225,9 @@ public class ManageServerMessage extends ACDGuiPageable {
                 for (Map.Entry<LinkedAccount, Member> linkedAccount : accountsThisPage.entrySet()) {
                     Member member = linkedAccount.getValue();
                     String discordName = member == null ? "Not available" : member.getEffectiveName();
-                    embed.addField("Minecraft: " + linkedAccount.getKey().getMinecraftUsername(), "Discord: " + discordName, true);
+                    String memberTag = member == null ? "Not available" : member.getUser().getAsTag();
+                    embed.addField("Minecraft: " + linkedAccount.getKey().getMinecraftUsername(),
+                            String.format("Discord: %s / %s", discordName, memberTag), true);
                 }
             }
             messageBuilder.setEmbeds(embed.build());

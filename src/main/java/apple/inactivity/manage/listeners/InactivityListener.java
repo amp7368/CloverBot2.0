@@ -21,6 +21,8 @@ public abstract class InactivityListener {
 
     public abstract void trigger(ServerManager serverManager, int daysInactiveToTrigger, String player, @Nullable UUID uuid);
 
+    public abstract long getChannelId();
+
     public enum InactivityListenerType {
         PING("ping", "Ping/Log", InactivityListenerPing.class, InactivityListenerPing::new);
 

@@ -47,6 +47,11 @@ public class InactivityListenerPing extends InactivityListener {
         }
     }
 
+    @Override
+    public long getChannelId() {
+        return channelId;
+    }
+
     public void doTriggerMessage(int daysInactiveToTrigger, String player, String mention) {
         channel.sendMessage(message
                 .replace("%s", player)

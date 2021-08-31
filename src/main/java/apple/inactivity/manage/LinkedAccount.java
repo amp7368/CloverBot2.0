@@ -31,12 +31,12 @@ public class LinkedAccount {
     }
 
     public void verifyMinecraftName(Runnable callback) {
-        RequestPrioritySettingsBuilder<MojangService.ResponseUUID, MojangService.MojangPriority> settings = RequestPrioritySettingsBuilder.emptyPriority();
+        RequestPrioritySettingsBuilder<MojangService.ResponseMinecraftUsername[], MojangService.MojangPriority> settings = RequestPrioritySettingsBuilder.emptyPriority();
         settings.withPriorityExceptionHandler(new SimpleExceptionHandler(new Class[]{Exception.class}, callback));
         settings.withPriority(MojangService.MojangPriority.HIGH);
-        MojangService.getPlayerName(minecraft, (uuid, username) -> {
+        MojangService.getPlayerName(minecraft, (username) -> {
             synchronized (this) {
-                this.minecraftUsername = username;
+                this.minecraftUsername = username[username.length-1];
             }
             callback.run();
         }, settings).completeAndRun();

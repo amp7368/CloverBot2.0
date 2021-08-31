@@ -10,6 +10,7 @@ import apple.utilities.request.settings.RequestPrioritySettingsBuilder;
 
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class MojangService extends AppleRequestPriorityService<MojangService.MojangPriority> {
     private static final MojangService instance = new MojangService();
@@ -28,12 +29,16 @@ public class MojangService extends AppleRequestPriorityService<MojangService.Moj
                 settings);
     }
 
-    public static AppleRequestService.RequestHandler<ResponseUUID> getPlayerName(UUID uuid, BiConsumer<String, String> uuidAndNameConsumer, RequestPrioritySettingsBuilder<ResponseUUID, MojangPriority> settings) {
-        return get().queuePriority(new AppleJsonFromURL<>(String.format(Links.GET_UUID, uuid.toString().replace("-", "")), ResponseUUID.class),
+    public static AppleRequestService.RequestHandler<ResponseMinecraftUsername[]> getPlayerName(UUID uuid, Consumer<String[]> uuidAndNameConsumer, RequestPrioritySettingsBuilder<ResponseMinecraftUsername[], MojangPriority> settings) {
+        return get().queuePriority(new AppleJsonFromURL<>(String.format(Links.GET_USERNAME, uuid.toString().replace("-", "")), ResponseMinecraftUsername[].class),
                 responseUUID -> {
-                    if (responseUUID == null || responseUUID.id == null)
+                    if (responseUUID == null || responseUUID.length == 0)
                         throw new AppleRequest.AppleRuntimeRequestException("no username for uuid");
-                    uuidAndNameConsumer.accept(responseUUID.id, responseUUID.name);
+                    String[] names = new String[responseUUID.length];
+                    for (int i = 0; i < responseUUID.length; i++) {
+                        names[i] = responseUUID[i].name;
+                    }
+                    uuidAndNameConsumer.accept(names);
                 },
                 settings);
     }
@@ -80,5 +85,9 @@ public class MojangService extends AppleRequestPriorityService<MojangService.Moj
     public static class ResponseUUID {
         public String name;
         public String id;
+    }
+
+    public static class ResponseMinecraftUsername {
+        public String name;
     }
 }

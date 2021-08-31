@@ -178,7 +178,19 @@ public class WatchGuild {
         return this.guildTag;
     }
 
+    public synchronized HashMap<UUID, WatchedPlayer> getPlayers() {
+        return new HashMap<>(this.players);
+    }
+
     public long getServerId() {
         return discordServerId;
+    }
+
+    public List<Long> getChannelIds() {
+        List<Long> channels = new ArrayList<>();
+        for (InactivityListener listener : listeners) {
+            channels.add(listener.getChannelId());
+        }
+        return channels;
     }
 }

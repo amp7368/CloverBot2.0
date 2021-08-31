@@ -4,7 +4,7 @@ import apple.discord.acd.ACD;
 import apple.discord.acd.command.ACDCommand;
 import apple.discord.acd.command.DiscordCommandAlias;
 import apple.discord.acd.parameters.ParameterFlag;
-import apple.inactivity.wynncraft.WynnDatabase;
+import apple.inactivity.discord.CloverPermissions;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public class CommandHelp extends ACDCommand {
@@ -12,9 +12,13 @@ public class CommandHelp extends ACDCommand {
         super(acd);
     }
 
-    @DiscordCommandAlias(alias = "help")
+    @DiscordCommandAlias(alias = "help", overlappingCommands = "help", order = 1, permission = CloverPermissions.ADMIN)
+    public void helpAdmin(MessageReceivedEvent event, @ParameterFlag(usage = "-legacy", flags = "-legacy") boolean showLegacy) {
+        new MessageHelp(acd, event.getChannel(), showLegacy, true).makeFirstMessage();
+    }
+
+    @DiscordCommandAlias(alias = "help", overlappingCommands = "help", order = 2, permission = CloverPermissions.NOT_ADMIN)
     public void help(MessageReceivedEvent event, @ParameterFlag(usage = "-legacy", flags = "-legacy") boolean showLegacy) {
-        new MessageHelp(acd, event.getChannel(), showLegacy).makeFirstMessage();
-        event.getChannel().sendMessage(String.valueOf(WynnDatabase.getSize())).queue();
+        new MessageHelp(acd, event.getChannel(), showLegacy, false).makeFirstMessage();
     }
 }
