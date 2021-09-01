@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 public abstract class InactivityListener {
     public final String type;
+    private final UUID uuid = UUID.randomUUID();
 
     public InactivityListener(String type) {
         this.type = type;
@@ -22,6 +23,10 @@ public abstract class InactivityListener {
     public abstract void trigger(ServerManager serverManager, int daysInactiveToTrigger, String player, @Nullable UUID uuid);
 
     public abstract long getChannelId();
+
+    public UUID getUUID() {
+        return uuid;
+    }
 
     public enum InactivityListenerType {
         PING("ping", "Ping/Log", InactivityListenerPing.class, InactivityListenerPing::new);

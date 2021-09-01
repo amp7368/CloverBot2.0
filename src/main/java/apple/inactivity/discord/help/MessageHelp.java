@@ -50,6 +50,9 @@ public class MessageHelp extends ACDGuiPageable {
         embed.setTitle("Help Page(" + (1 + page) + ")");
         embed.addField("c!clover", "Open a gui to manage your server settings", false);
         embed.addField("c!watch [guild]", "Open a gui to create a watch on a guild", false);
+        embed.addField("c!link account [player] [discord]", "Links a minecraft player to a discord account to tag them in c!watch", false);
+        embed.addField("c!link account missing", "Shows all accounts that are not linked for guilds that your discord server watches", false);
+        embed.addField("c!clear all link account confirm", "Clears all linked accounts from your server", false);
         message.setEmbeds(embed.build());
         return message.build();
     }

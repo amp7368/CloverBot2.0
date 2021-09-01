@@ -1,16 +1,24 @@
 package apple.inactivity.wynncraft;
 
 import apple.discord.acd.MillisTimeUnits;
+import apple.inactivity.CloverMain;
+import apple.inactivity.logging.DailyStatistics;
+import apple.inactivity.logging.LoggingNames;
 import apple.inactivity.utils.Links;
 import apple.inactivity.wynncraft.guild.WynnGuild;
 import apple.inactivity.wynncraft.player.WynnPlayer;
 import apple.inactivity.wynncraft.player.WynnPlayerResponse;
-import apple.utilities.request.*;
+import apple.utilities.request.AppleJsonFromURL;
+import apple.utilities.request.AppleRequestPriorityService;
+import apple.utilities.request.RequestLogger;
+import apple.utilities.request.SimpleExceptionHandler;
 import apple.utilities.request.settings.RequestPrioritySettingsBuilder;
+import apple.utilities.util.ExceptionUnpackaging;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -24,7 +32,7 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
     }
 
     public static void queue(WynnRequestPriority priority, String guild, Consumer<WynnGuild> runAfter) {
-        RequestLogger<WynnGuild> logger = getLogger(guild);
+        RequestLogger<WynnGuild> logger = getGuildLogger(guild);
         RequestPrioritySettingsBuilder<WynnGuild, WynnRequestPriority> settings = get()
                 .<WynnGuild>getDefaultPrioritySettings()
                 .withPriority(priority)
@@ -39,35 +47,49 @@ public class WynncraftService extends AppleRequestPriorityService<WynncraftServi
                 .<WynnPlayer>getDefaultPrioritySettings()
                 .withPriority(priority)
                 .withPriorityExceptionHandler(new SimpleExceptionHandler(new Class[]{IOException.class}, () -> runAfter.accept(null)))
-                .withPriorityRequestLogger(getLogger(String.format(Links.PLAYER_STATS, guildMember)));
+                .withPriorityRequestLogger(getPlayerLogger(String.format(Links.PLAYER_STATS, guildMember)));
         get().queuePriority(() -> {
             @Nullable WynnPlayer player = WynnDatabase.getPlayer(guildMember);
             if (player != null) return player;
             WynnPlayerResponse response = new AppleJsonFromURL<>(String.format(Links.PLAYER_STATS, guildMember),
                     WynnPlayerResponse.class).withGson(GSON).get();
             if (response == null || response.data.length == 0)
-                throw new AppleRequest.AppleRuntimeRequestException("Data does not exist");
+                throw new RuntimeException(new IOException("Data does not exist"));
+            DailyStatistics.requestPlayerComplete(guildMember);
             WynnDatabase.addMember(response.data[0]);
             return response.data[0];
         }, runAfter, settings);
     }
 
     @NotNull
-    private static <T> RequestLogger<T> getLogger(String guild) {
+    private static <T> RequestLogger<T> getPlayerLogger(String name) {
         return new RequestLogger<>() {
             @Override
-            public void startRequest() {
-                System.out.println("Start request '" + guild + "'");
-            }
-
-            @Override
-            public void exceptionHandle(Exception e) {
-                System.out.println("Exception" + guild);
+            public void exceptionUncaught(Exception e) {
+                CloverMain.log("Exception getting player " + name + "\n" + ExceptionUnpackaging.getStackTrace(e), Level.ERROR, LoggingNames.WYNN);
+                DailyStatistics.requestPlayerError(name);
             }
 
             @Override
             public void finishDone(T gotten) {
-                System.out.println("T has been gotten " + guild);
+                CloverMain.log("Retrieved player from url: " + name, Level.INFO, LoggingNames.WYNN);
+            }
+        };
+    }
+
+    @NotNull
+    private static <T> RequestLogger<T> getGuildLogger(String guild) {
+        return new RequestLogger<>() {
+            @Override
+            public void exceptionUncaught(Exception e) {
+                CloverMain.log("Exception getting guild " + guild + "\n" + ExceptionUnpackaging.getStackTrace(e), Level.ERROR, LoggingNames.WYNN);
+                DailyStatistics.requestGuildError(guild);
+            }
+
+            @Override
+            public void finishDone(T gotten) {
+                CloverMain.log("Retrieved guild " + guild, Level.INFO, LoggingNames.WYNN);
+                DailyStatistics.requestGuildComplete(guild);
             }
         };
     }

@@ -26,7 +26,7 @@ public class CommandStats extends ACDCommand {
             MojangService.getUUID(playerName, (uuid, name) -> {
                 WynnPlayer playerNew;
                 if ((playerNew = WynnDatabase.getPlayer(Links.splitUUID(uuid))) == null) {
-                    WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.NOW, Links.splitUUID(uuid), (wynnPlayer) -> {
+                    WynncraftService.queuePriority(WynncraftService.WynnRequestPriority.IMMEDIATE, Links.splitUUID(uuid), (wynnPlayer) -> {
                         if (wynnPlayer == null) {
                             channel.sendMessage(String.format("Either the api is down, or the player '%s' doesn't exist.", playerName)).queue();
                         } else {

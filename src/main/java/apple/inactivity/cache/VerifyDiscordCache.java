@@ -1,6 +1,9 @@
 package apple.inactivity.cache;
 
+import apple.inactivity.CloverMain;
 import apple.inactivity.discord.DiscordBot;
+import apple.inactivity.logging.LoggingNames;
+import org.slf4j.event.Level;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -79,11 +82,13 @@ public class VerifyDiscordCache {
     }
 
     public static void connect() throws ClassNotFoundException, SQLException {
+        CloverMain.log("Spooky db connecting", Level.INFO, LoggingNames.CLOVER);
         synchronized (syncDB) {
             Class.forName("org.sqlite.JDBC");
             database = DriverManager.getConnection("jdbc:sqlite:" + DATABASE_FILENAME);
             verify();
         }
+        CloverMain.log("Spooky db connected", Level.INFO, LoggingNames.CLOVER);
     }
 
     private synchronized static void verify() throws SQLException {

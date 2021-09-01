@@ -11,9 +11,6 @@ mainClassName = 'apple.inactivity.CloverMain'
 version = '1.0'
 
 jar {
-    manifest {
-        attributes 'Main-Class': 'apple.inactivity.CloverMain'
-    }
 }
 configurations.all {
     resolutionStrategy.cacheDynamicVersionsFor(20, 'seconds')
@@ -36,8 +33,10 @@ dependencies {
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'apple.acd:DiscordACD:1.0.BUILD-SNAPSHOT'
     implementation 'apple.utilities:AppleUtilities:1.0.BUILD-SNAPSHOT-all'
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.12'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+    implementation 'org.yaml:snakeyaml:1.21'
 }
 
 project.buildDir("C:\\Users\\Aaron\\Desktop\\bots\\cloverBot")

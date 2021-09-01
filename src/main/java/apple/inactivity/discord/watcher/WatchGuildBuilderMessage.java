@@ -40,10 +40,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.internal.interactions.ButtonImpl;
 import net.dv8tion.jda.internal.interactions.SelectionMenuImpl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -100,7 +97,7 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("Add members to not watch");
         if (extraMessage != null) embed.setAuthor(extraMessage);
-        embed.setDescription(trigger.getIgnoreUUIDs().stream().map(p -> String.format("[**%s**(%s)]", p.getKey(), Links.splitUUID(p.getValue()))).collect(Collectors.joining("\n")));
+        embed.setDescription(trigger.getIgnoreUUIDs().stream().map(p -> String.format("[**%s** (%s)]", p.getKey(), p.getValue().toString())).collect(Collectors.joining("\n")));
         messageBuilder.setEmbeds(embed.build());
         messageBuilder.setActionRows(ActionRow.of(
                 new ButtonImpl("add_member", "Add members", ButtonStyle.PRIMARY, false, null)
@@ -116,33 +113,35 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
     }
 
     public void addMember(MessageReceivedEvent event, String membersAll) {
-        event.getMessage().addReaction(DiscordEmoji.WORKING.getEmoji()).queue();
+        Message msg = event.getMessage();
+        msg.addReaction(DiscordEmoji.WORKING.getEmoji()).queue();
         extraMessage = null;
         String[] membersSplit = membersAll.split("[,\\s]");
-        final List<Pair<String, String>> usernameAndUUID = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(membersSplit.length);
         for (String member : membersSplit) {
-            if (member.isBlank()) continue;
+            if (member.isBlank()) {
+                decrementMemberReadCount(msg, count);
+                continue;
+            }
             member = member.trim();
             RequestPrioritySettingsBuilder<MojangService.ResponseUUID, MojangService.MojangPriority> settings = RequestPrioritySettingsBuilder.emptyPriority();
             settings.withPriority(MojangService.MojangPriority.HIGH);
-            settings.withPriorityExceptionHandler((e) -> decrementMemberReadCount(event, usernameAndUUID, count));
+            settings.withPriorityExceptionHandler((e) -> decrementMemberReadCount(msg, count));
             MojangService.getUUID(member, (uuid, name) -> {
-                synchronized (usernameAndUUID) {
-                    usernameAndUUID.add(new Pair<>(name, uuid));
-                }
-                decrementMemberReadCount(event, usernameAndUUID, count);
+                decrementMemberReadCount(msg, count);
+                trigger.addIgnored(new Pair<>(name, UUID.fromString(Links.splitUUID(uuid))));
             }, settings);
         }
     }
 
-    private void decrementMemberReadCount(MessageReceivedEvent event, List<Pair<String, String>> usernameAndUUID, AtomicInteger count) {
+    private void decrementMemberReadCount(Message msg, AtomicInteger count) {
         if (count.decrementAndGet() == 0) {
-            trigger.addIgnored(usernameAndUUID);
             editMessage();
-            event.getMessage().delete().queue(e -> {
+            msg.delete().queue(e -> {
             }, f -> {
             });
+        } else {
+            editMessageOnTimer();
         }
     }
 
@@ -176,20 +175,23 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
         // add menu to select a listener to add
         options = new ArrayList<>();
         for (int listenerIndex = 0, size = trigger.getListeners().size(); listenerIndex < size; listenerIndex++) {
-            options.add(SelectOption.of(String.valueOf(listenerIndex + 1), String.valueOf(listenerIndex)));
+            options.add(SelectOption.of(String.format("Listener #%d", listenerIndex + 1), String.valueOf(listenerIndex)));
         }
         SelectionMenuImpl editListeners = new SelectionMenuImpl("edit_listener_menu", "Edit listeners", 1, 1, false, options);
+        SelectionMenuImpl removeListeners = new SelectionMenuImpl("remove_listener_menu", "Remove listeners", 1, 1, false, options);
         List<ActionRow> actionRows = new ArrayList<>(List.of(ActionRow.of(
-                new ButtonImpl("decrease", "Trigger", ButtonStyle.PRIMARY, false, DiscordEmoji.LEFT.getDiscordEmoji()),
-                new ButtonImpl("increase", "Trigger", ButtonStyle.PRIMARY, false, DiscordEmoji.RIGHT.getDiscordEmoji()),
+                new ButtonImpl("decrease", "1st", ButtonStyle.PRIMARY, false, DiscordEmoji.LEFT.getDiscordEmoji()),
+                new ButtonImpl("increase", "1st", ButtonStyle.PRIMARY, false, DiscordEmoji.RIGHT.getDiscordEmoji()),
                 new ButtonImpl("decrease_repeat", "Repeat", ButtonStyle.PRIMARY, false, DiscordEmoji.LEFT.getDiscordEmoji()),
                 new ButtonImpl("increase_repeat", "Repeat", ButtonStyle.PRIMARY, false, DiscordEmoji.RIGHT.getDiscordEmoji()),
-                new ButtonImpl("toggle_repeat", "Toggle Repeating", ButtonStyle.PRIMARY, false, null)
+                new ButtonImpl("toggle_repeat", "Toggle repeating", ButtonStyle.PRIMARY, false, null)
         ), ActionRow.of(
                 addListener
         )));
-        if (!options.isEmpty())
+        if (!options.isEmpty()) {
             actionRows.add(ActionRow.of(editListeners));
+            actionRows.add(ActionRow.of(removeListeners));
+        }
 
         messageBuilder.setActionRows(actionRows);
         // add button to remove last listener
@@ -306,12 +308,25 @@ public class WatchGuildBuilderMessage extends ACDGuiPageable {
         List<SelectOption> selections = interaction.getSelectedOptions();
         if (selections != null && !selections.isEmpty()) {
             int index = Integer.parseInt(selections.get(0).getValue());
-            InactivityListener currentListener = this.trigger.getListeners().remove(index);
+            InactivityListener currentListener = this.trigger.getListeners().get(index);
             ListenerPingSubPage subPage = new ListenerPingSubPage(acd, message, this, (InactivityListenerPing) currentListener, author);
             addSubPage(subPage);
             subPage.makeFirstMessage();
         }
 
+        editAsReply(interaction);
+    }
+
+    @GuiMenu(id = "remove_listener_menu")
+    public void removeListener(SelectionMenuEvent interaction) {
+        List<SelectOption> selections = interaction.getSelectedOptions();
+        if (selections != null && !selections.isEmpty()) {
+            int index = Integer.parseInt(selections.get(0).getValue());
+            List<InactivityListener> listeners = this.trigger.getListeners();
+            if (listeners.size() > index) {
+                this.trigger.removeListener(listeners.get(index));
+            }
+        }
         editAsReply(interaction);
     }
 

@@ -8,6 +8,7 @@ import apple.inactivity.wynncraft.guild.WynnGuild;
 import apple.inactivity.wynncraft.guild.WynnGuildMember;
 import apple.inactivity.wynncraft.player.WynnInactivePlayer;
 import apple.utilities.structures.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,12 +16,12 @@ import java.util.stream.Collectors;
 public class WatchGuild {
     public static final Comparator<? super WatchGuild> COMPARATOR = ((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.guildName, o2.guildName));
 
-    private final ArrayList<InactivityListener> listeners = new ArrayList<>();
+    private final Map<UUID, InactivityListener> listeners = new HashMap<>();
     private final HashMap<UUID, WatchedPlayer> players = new HashMap<>();
     private int daysInactiveToTrigger = 14;
     private int daysToRepeat = 7;
     private boolean shouldRepeat = true;
-    private ArrayList<Pair<String, String>> ignoreUUIDs = new ArrayList<>();
+    private ArrayList<Pair<String, UUID>> ignoreUUIDs = new ArrayList<>();
     private final UUID uuid = UUID.randomUUID();
     private String guildTag;
     private String guildName;
@@ -116,29 +117,31 @@ public class WatchGuild {
         return daysToRepeat;
     }
 
-    public synchronized ArrayList<Pair<String, String>> getIgnoreUUIDs() {
+    public synchronized ArrayList<Pair<String, UUID>> getIgnoreUUIDs() {
         return ignoreUUIDs;
     }
 
     public synchronized List<InactivityListener> getListeners() {
-        return listeners;
+        ArrayList<InactivityListener> sorted = new ArrayList<>(listeners.values());
+        sorted.sort(Comparator.comparing(InactivityListener::getUUID, UUID::compareTo));
+        return sorted;
     }
 
     public synchronized void addListener(InactivityListener listener) {
-        listeners.add(listener);
+        listeners.put(listener.getUUID(), listener);
     }
 
     public synchronized void incrementDaysInactive(int i) {
-        this.daysInactiveToTrigger += i;
+        this.daysInactiveToTrigger = Math.max(1, i + this.daysInactiveToTrigger);
     }
 
     public synchronized void incrementDaysToRepeat(int i) {
-        this.daysToRepeat += i;
+        this.daysToRepeat = Math.max(1, i + this.daysToRepeat);
     }
 
     public synchronized void callTestTrigger(String inactivityPlayer) {
         verifyServerManager();
-        for (InactivityListener listener : listeners) {
+        for (InactivityListener listener : listeners.values()) {
             listener.trigger(serverManager, daysInactiveToTrigger, inactivityPlayer, null);
         }
     }
@@ -147,13 +150,30 @@ public class WatchGuild {
         watchedPlayer.setLastCalled(daysInactive);
         save();
         verifyServerManager();
-        for (InactivityListener listener : listeners) {
+        if (isIgnored(uuid)) return;
+        for (InactivityListener listener : listeners.values()) {
             listener.trigger(serverManager, daysInactive, inactivityPlayer, uuid);
         }
     }
 
-    public synchronized void addIgnored(List<Pair<String, String>> usernameAndUUID) {
+    private boolean isIgnored(@NotNull UUID uuid) {
+        String uuidString = uuid.toString().replace("-", "");
+        for (Pair<String, UUID> ignore : ignoreUUIDs) {
+            if (ignore.getValue().equals(uuidString)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public synchronized void addIgnored(List<Pair<String, UUID>> usernameAndUUID) {
         this.ignoreUUIDs.addAll(usernameAndUUID);
+        this.ignoreUUIDs = new ArrayList<>(new HashSet<>(this.ignoreUUIDs));
+        this.ignoreUUIDs.sort((p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(p1.getKey(), p2.getKey()));
+    }
+
+    public synchronized void addIgnored(Pair<String, UUID> usernameAndUUID) {
+        this.ignoreUUIDs.add(usernameAndUUID);
         this.ignoreUUIDs = new ArrayList<>(new HashSet<>(this.ignoreUUIDs));
         this.ignoreUUIDs.sort((p1, p2) -> String.CASE_INSENSITIVE_ORDER.compare(p1.getKey(), p2.getKey()));
     }
@@ -186,11 +206,15 @@ public class WatchGuild {
         return discordServerId;
     }
 
-    public List<Long> getChannelIds() {
+    public synchronized List<Long> getChannelIds() {
         List<Long> channels = new ArrayList<>();
-        for (InactivityListener listener : listeners) {
+        for (InactivityListener listener : listeners.values()) {
             channels.add(listener.getChannelId());
         }
         return channels;
+    }
+
+    public synchronized void removeListener(InactivityListener inactivityListener) {
+        listeners.remove(inactivityListener.getUUID());
     }
 }

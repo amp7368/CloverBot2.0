@@ -1,8 +1,11 @@
 package apple.inactivity;
 
 import apple.discord.acd.MillisTimeUnits;
+import apple.inactivity.logging.LoggingNames;
 import apple.inactivity.manage.listeners.AggregatedWatchesByGuild;
 import apple.inactivity.manage.listeners.WatchGuild;
+import apple.utilities.util.ExceptionUnpackaging;
+import org.slf4j.event.Level;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -22,6 +25,7 @@ public class WatchGuildDaemon {
     }
 
     private void watch() {
+        CloverMain.log("Watch Guild Daemon started", Level.INFO, LoggingNames.CLOVER);
         while (true) {
             try {
                 synchronized (this) {
@@ -31,16 +35,17 @@ public class WatchGuildDaemon {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                CloverMain.log("Exception in watch guild daemon" + "\n" + ExceptionUnpackaging.getStackTrace(e), Level.ERROR, LoggingNames.DAEMON);
             }
             try {
                 Thread.sleep(MillisTimeUnits.MINUTE);
             } catch (InterruptedException e) {
-                e.printStackTrace(); // todo tell appleptr16
+                CloverMain.log("Exception sleeping in guild daemon" + "\n" + ExceptionUnpackaging.getStackTrace(e), Level.ERROR, LoggingNames.DAEMON);
                 // if we can't sleep, abort trying to
                 break;
             }
         }
+        CloverMain.log("Watch Guild Daemon ended", Level.ERROR, LoggingNames.DAEMON);
     }
 
     public void addWatch(WatchGuild watch) {
@@ -51,7 +56,7 @@ public class WatchGuildDaemon {
         }
     }
 
-    public void removeWatch(UUID uuid,String guildTag) {
+    public void removeWatch(UUID uuid, String guildTag) {
         synchronized (this) {
             allWatches.remove(uuid);
             watchesByGuild.get(guildTag).remove(uuid);

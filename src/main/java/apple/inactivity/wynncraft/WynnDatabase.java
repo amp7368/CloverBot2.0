@@ -1,6 +1,7 @@
 package apple.inactivity.wynncraft;
 
 import apple.inactivity.CloverMain;
+import apple.inactivity.logging.LoggingNames;
 import apple.inactivity.utils.FileIOService;
 import apple.inactivity.wynncraft.guild.WynnGuild;
 import apple.inactivity.wynncraft.guild.WynnGuildHeader;
@@ -12,6 +13,7 @@ import apple.utilities.request.AppleRequestService;
 import com.google.gson.reflect.TypeToken;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.util.*;
@@ -21,7 +23,7 @@ public class WynnDatabase {
     private final static WynnDatabase instance = new WynnDatabase();
 
     static {
-        GUILD_FOLDER = new File(new File(AppleJsonDatabase.getDBFolder(CloverMain.class), "wynncraft"), "guild");
+        GUILD_FOLDER = new File(AppleJsonDatabase.getDBFolder(CloverMain.class), "guildList");
         GUILD_FOLDER.mkdirs();
     }
 
@@ -88,6 +90,7 @@ public class WynnDatabase {
                 if (request != null) request.completeAndRun();
             }
         }
+        CloverMain.log("Wynn Guild DB loaded", Level.INFO, LoggingNames.CLOVER);
     }
 
     public static void setGuilds(String[] guilds) {

@@ -1,6 +1,7 @@
 package apple.inactivity.manage;
 
 import apple.inactivity.CloverMain;
+import apple.inactivity.logging.LoggingNames;
 import apple.inactivity.manage.listeners.InactivityListener;
 import apple.inactivity.manage.listeners.WatchGuild;
 import apple.inactivity.utils.FileIOLazyService;
@@ -15,6 +16,7 @@ import apple.utilities.util.FileFormatting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.util.HashMap;
@@ -54,6 +56,7 @@ public class Servers implements AppleJsonDatabaseManagerKey<ServerManager> {
         for (ServerManager server : servers.values()) {
             server.register();
         }
+        CloverMain.log("Discord Server DB loaded", Level.INFO, LoggingNames.CLOVER);
     }
 
     @NotNull

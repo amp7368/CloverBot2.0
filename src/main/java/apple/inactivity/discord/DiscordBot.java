@@ -17,6 +17,7 @@ import apple.inactivity.discord.linked.LinkAccountCommand;
 import apple.inactivity.discord.misc.CommandSuggest;
 import apple.inactivity.discord.stats.CommandStats;
 import apple.inactivity.discord.watcher.WatchGuildCommand;
+import apple.inactivity.logging.LoggingNames;
 import apple.inactivity.utils.Pretty;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -27,6 +28,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.event.Level;
 
 import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
@@ -43,6 +45,7 @@ public class DiscordBot extends ListenerAdapter {
     public static final String PREFIX = "t!";
     public static final long APPLEPTR16 = 253646208084475904L;
     public static final long LOGGING_CHANNEL = 769737908293992509L;
+    public static final long STATS_CHANNEL = CloverMain.CONFIG.getCloverStatsChannel();
     public static ACD ACD;
 
     public static String discordToken; // my bot
@@ -74,6 +77,7 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     public DiscordBot() throws LoginException {
+        CloverMain.log("DiscordBot starting", Level.INFO, LoggingNames.DISCORD);
         Collection<GatewayIntent> intents = new ArrayList<>(Arrays.asList(GatewayIntent.values()));
         intents.remove(GatewayIntent.GUILD_PRESENCES);
         JDABuilder builder = JDABuilder.create(intents);
@@ -94,6 +98,7 @@ public class DiscordBot extends ListenerAdapter {
         new ManageServerCommand(ACD);
         new LinkAccountCommand(ACD);
         new CommandChangelog(ACD);
+        CloverMain.log("DiscordBot started", Level.INFO, LoggingNames.DISCORD);
     }
 
     @Override

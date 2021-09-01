@@ -1,9 +1,13 @@
 package apple.inactivity.utils;
 
+import apple.inactivity.CloverMain;
+import apple.inactivity.logging.LoggingNames;
 import apple.utilities.request.AppleRequest;
 import apple.utilities.request.AppleRequestService;
 import apple.utilities.request.RequestLogger;
 import apple.utilities.request.settings.RequestSettingsBuilder;
+import apple.utilities.util.ExceptionUnpackaging;
+import org.slf4j.event.Level;
 
 import java.util.function.Consumer;
 
@@ -19,7 +23,7 @@ public class FileIOService extends AppleRequestService {
         builder.addRequestLogger(new RequestLogger<T>() {
             @Override
             public void exceptionHandle(Exception e) {
-                e.printStackTrace();
+                CloverMain.log("Exception doing file IO " + "\n" + ExceptionUnpackaging.getStackTrace(e), Level.ERROR, LoggingNames.CLOVER);
             }
         });
         return super.queue(request, runAfter, builder);

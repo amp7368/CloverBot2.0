@@ -1,6 +1,7 @@
 package apple.inactivity.wynncraft;
 
 import apple.inactivity.CloverMain;
+import apple.inactivity.logging.LoggingNames;
 import apple.inactivity.utils.FileIOLazyService;
 import apple.inactivity.utils.FileIOService;
 import apple.inactivity.wynncraft.player.WynnInactivePlayer;
@@ -10,6 +11,7 @@ import apple.utilities.request.keyed.AppleRequestKeyQueue;
 import apple.utilities.request.settings.RequestSettingsBuilder;
 import apple.utilities.request.settings.RequestSettingsBuilderVoid;
 import apple.utilities.util.FileFormatting;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.util.HashMap;
@@ -41,7 +43,7 @@ public class WynnPlayerInactivity implements AppleJsonDatabaseManagerKey<WynnPla
 
     @Override
     public File getDBFolder() {
-        return FileFormatting.fileWithChildren(AppleJsonDatabaseManagerKey.getDBFolder(CloverMain.class), "wynncraft", "inactive","player");
+        return FileFormatting.fileWithChildren(AppleJsonDatabaseManagerKey.getDBFolder(CloverMain.class), "wynncraft", "inactive", "player");
     }
 
     @Override
@@ -58,6 +60,7 @@ public class WynnPlayerInactivity implements AppleJsonDatabaseManagerKey<WynnPla
         for (WynnPlayerInactivitySaveable db : loadAllNow(WynnPlayerInactivitySaveable.class)) {
             loadDB(db);
         }
+        CloverMain.log("Wynn PlayerActivity DB loaded", Level.INFO, LoggingNames.CLOVER);
     }
 
     private void loadDB(WynnPlayerInactivitySaveable db) {

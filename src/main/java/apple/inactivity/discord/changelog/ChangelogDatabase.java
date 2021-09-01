@@ -1,6 +1,7 @@
 package apple.inactivity.discord.changelog;
 
 import apple.inactivity.CloverMain;
+import apple.inactivity.logging.LoggingNames;
 import apple.inactivity.utils.FileIOService;
 import apple.utilities.database.AppleJsonDatabase;
 import apple.utilities.database.SaveFileable;
@@ -10,6 +11,7 @@ import apple.utilities.request.settings.RequestSettingsBuilder;
 import apple.utilities.request.settings.RequestSettingsBuilderVoid;
 import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.util.Collection;
@@ -22,6 +24,7 @@ public class ChangelogDatabase implements AppleJsonDatabaseManager<ChangelogData
     public static void loadNow() {
         @NotNull Collection<ChangelogDatabase> instanceTemp = new ChangelogDatabase().loadAllNow(ChangelogDatabase.class);
         instance = instanceTemp.stream().findFirst().orElseGet(ChangelogDatabase::new);
+        CloverMain.log("Discord Changelog DB loaded", Level.INFO, LoggingNames.CLOVER);
     }
 
     public static ChangelogDatabase get() {
