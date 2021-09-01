@@ -1,33 +1,58 @@
 package apple.inactivity.discord;
 
+import apple.discord.acd.ACD;
+import apple.discord.acd.command.ACDCommandResponse;
+import apple.discord.acd.command.CommandLogger;
+import apple.discord.acd.command.CommandLoggerLevel;
+import apple.discord.acd.command.DefaultCommandLoggerLevel;
 import apple.inactivity.CloverMain;
-import apple.inactivity.discord.commands.Commands;
-import apple.inactivity.discord.reactions.AllReactables;
+import apple.inactivity.cache.SqlDiscordCache;
+import apple.inactivity.discord.activity.CommandInactivity;
+import apple.inactivity.discord.changelog.ChangelogDatabase;
+import apple.inactivity.discord.changelog.CommandChangelog;
+import apple.inactivity.discord.changelog.MessageChangelog;
+import apple.inactivity.discord.clover.ManageServerCommand;
+import apple.inactivity.discord.help.CommandHelp;
+import apple.inactivity.discord.linked.LinkAccountCommand;
+import apple.inactivity.discord.misc.CommandSuggest;
+import apple.inactivity.discord.stats.CommandStats;
+import apple.inactivity.discord.watcher.WatchGuildCommand;
+import apple.inactivity.logging.LoggingNames;
+import apple.inactivity.utils.Pretty;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.event.Level;
 
-import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class DiscordBot extends ListenerAdapter {
     public static final String PREFIX = "c!";
+    public static final long APPLEPTR16 = 253646208084475904L;
+    public static final long LOGGING_CHANNEL = 769737908293992509L;
+    public static final long STATS_CHANNEL = CloverMain.CONFIG.getCloverStatsChannel();
+    private static final long APPLEBOTS_SERVER = 603039156892860417L;
+    public static ACD ACD;
 
     public static String discordToken; // my bot
     public static JDA client;
 
-    public DiscordBot() {
+    static {
         List<String> list = Arrays.asList(CloverMain.class.getProtectionDomain().getCodeSource().getLocation().getPath().split("/"));
         String BOT_TOKEN_FILE_PATH = String.join("/", list.subList(0, list.size() - 1)) + "/config/discordToken.data";
 
@@ -40,7 +65,6 @@ public class DiscordBot extends ListenerAdapter {
             }
             System.err.println("Please fill in the token for the discord bot in '" + BOT_TOKEN_FILE_PATH + "'");
             System.exit(1);
-            return;
         }
         try {
             BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -53,20 +77,34 @@ public class DiscordBot extends ListenerAdapter {
 
     }
 
-    public void enableDiscord() throws LoginException {
-        JDABuilder builder = JDABuilder.createDefault(discordToken);
+    public DiscordBot() throws LoginException {
+        CloverMain.log("DiscordBot starting", Level.INFO, LoggingNames.DISCORD);
+        Collection<GatewayIntent> intents = new ArrayList<>(Arrays.asList(GatewayIntent.values()));
+        intents.remove(GatewayIntent.GUILD_PRESENCES);
+        intents.remove(GatewayIntent.GUILD_MEMBERS);
+        JDABuilder builder = JDABuilder.create(intents);
         builder.addEventListeners(this);
+        builder.setMemberCachePolicy(MemberCachePolicy.NONE);
+        builder.setToken(discordToken);
         client = builder.build();
-        client.getPresence().setPresence(Activity.playing(PREFIX + "help~coming soon"), true);
-    }
-
-    @Override
-    public void onReady(@Nonnull ReadyEvent event) {
+        client.getPresence().setPresence(Activity.playing(PREFIX + "help"), false);
+        ACD = new ACD(PREFIX, client, APPLEBOTS_SERVER);
+        CloverPermissions.addAllPermissions(ACD);
+        ParameterConverterNames.addAllParameters(ACD);
+        ACD.getCommandLogger().addLogger(new CloverLogger());
+        new CommandInactivity(ACD);
+        new CommandStats(ACD);
+        new CommandSuggest(ACD);
+        new CommandHelp(ACD);
+        new WatchGuildCommand(ACD);
+        new ManageServerCommand(ACD);
+        new LinkAccountCommand(ACD);
+        new CommandChangelog(ACD);
+        CloverMain.log("DiscordBot started", Level.INFO, LoggingNames.DISCORD);
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-
         if (event.getAuthor().isBot()) {
             return;
         }
@@ -75,22 +113,29 @@ public class DiscordBot extends ListenerAdapter {
         }
         // the author is not a bot
 
-        String messageContent = event.getMessage().getContentStripped().toLowerCase();
-        // deal with the different commands
-        for (Commands command : Commands.values()) {
-            if (command.isCommand(messageContent)) {
-                command.run(event);
-                return;
-            }
+        try {
+            SqlDiscordCache.cache(event);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 
-    @Override
-    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        User user = event.getUser();
-        if (user == null || user.isBot()) {
-            return;
+    private static class CloverLogger implements CommandLogger {
+        @Override
+        public void log(@NotNull MessageReceivedEvent event, ACDCommandResponse response) {
+            String userTag = event.getAuthor().getAsTag();
+            String content = event.getMessage().getContentDisplay();
+            String guildName = event.getGuild().getName();
+            if (!ChangelogDatabase.hasHeardChangelog(event.getAuthor().getIdLong())) {
+                new MessageChangelog(ACD, event.getChannel()).makeFirstMessage();
+                ChangelogDatabase.addMember(event.getAuthor());
+            }
+            SendLogs.log(Pretty.uppercaseFirst(response.getCommandAlias()), String.format("*%s* has requested '%s' in the %s server", userTag, content, guildName));
         }
-        AllReactables.dealWithReaction(event);
+
+        @Override
+        public boolean shouldLog(CommandLoggerLevel level) {
+            return level.getLevel() != DefaultCommandLoggerLevel.IGNORE.getLevel();
+        }
     }
 }
