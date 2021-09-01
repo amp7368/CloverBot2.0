@@ -23,16 +23,17 @@ import java.util.Date;
 
 public class CloverMain {
     public static final CloverConfig CONFIG = CloverConfig.load();
-    private static final AppleLoggerManager LOGGER = new AppleLoggerManager(
-            ArrayUtils.combine(LoggingNames.values(), new ErrorLogger(), AppleLoggerName[]::new),
-            LoggerFactory.getLogger("clover")
-    );
+    private static final AppleLoggerManager LOGGER;
 
     static {
         SimpleDateFormat dateFormat = new SimpleDateFormat("--yy.MM.dd--hh'h'mm'm'");
         String dateString = CONFIG.getVersionIsDate() ? dateFormat.format(new Date()) : "";
         System.setProperty("logFile.version", dateString);
         System.setProperty("logFile.shouldAppend", String.valueOf(CONFIG.isShouldAppend()));
+        LOGGER = new AppleLoggerManager(
+                ArrayUtils.combine(LoggingNames.values(), new ErrorLogger(), AppleLoggerName[]::new),
+                LoggerFactory.getLogger("clover")
+        );
     }
 
     public static void main(String[] args) throws LoginException, SQLException, ClassNotFoundException, IOException {

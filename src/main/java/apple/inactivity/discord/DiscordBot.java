@@ -42,10 +42,11 @@ import java.util.Collection;
 import java.util.List;
 
 public class DiscordBot extends ListenerAdapter {
-    public static final String PREFIX = "t!";
+    public static final String PREFIX = "c!";
     public static final long APPLEPTR16 = 253646208084475904L;
     public static final long LOGGING_CHANNEL = 769737908293992509L;
     public static final long STATS_CHANNEL = CloverMain.CONFIG.getCloverStatsChannel();
+    private static final long APPLEBOTS_SERVER = 603039156892860417L;
     public static ACD ACD;
 
     public static String discordToken; // my bot
@@ -80,13 +81,14 @@ public class DiscordBot extends ListenerAdapter {
         CloverMain.log("DiscordBot starting", Level.INFO, LoggingNames.DISCORD);
         Collection<GatewayIntent> intents = new ArrayList<>(Arrays.asList(GatewayIntent.values()));
         intents.remove(GatewayIntent.GUILD_PRESENCES);
+        intents.remove(GatewayIntent.GUILD_MEMBERS);
         JDABuilder builder = JDABuilder.create(intents);
         builder.addEventListeners(this);
         builder.setMemberCachePolicy(MemberCachePolicy.NONE);
         builder.setToken(discordToken);
         client = builder.build();
         client.getPresence().setPresence(Activity.playing(PREFIX + "help"), false);
-        ACD = new ACD(PREFIX, client);
+        ACD = new ACD(PREFIX, client, APPLEBOTS_SERVER);
         CloverPermissions.addAllPermissions(ACD);
         ParameterConverterNames.addAllParameters(ACD);
         ACD.getCommandLogger().addLogger(new CloverLogger());
